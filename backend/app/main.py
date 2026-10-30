@@ -1,17 +1,16 @@
-"""Minimal Postly API skeleton.
-
-T-003 expands this into the real structure: app/core/config.py (settings),
-app/db/client.py (prisma singleton), app/api/v1/ routers and tests.
-For now: one health endpoint that really talks to the database.
-"""
+"""Postly API application."""
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from prisma import Prisma
+from fastapi.middleware.cors import CORSMiddleware
 
-db = Prisma()
+from app.api.v1.router import router as v1_router
+from app.core.config import get_settings
+from app.db.client import db
+
+settings = get_settings()
 
 
 @asynccontextmanager
@@ -29,11 +28,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origin_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.get("/api/v1/health")
-async def health() -> dict[str, str]:
-    try:
-        await db.spikerow.count()
-    except Exception:
-        return {"status": "degraded", "db": "down", "version": "0.1.0"}
-    return {"status": "ok", "db": "ok", "version": "0.1.0"}
+app.include_router(v1_router, prefix=settings.api_prefix)

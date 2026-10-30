@@ -14,7 +14,7 @@ Legend: `[ ]` ready · `[~]` in-progress · `[>]` review · `[x]` done · `[!]` 
 |---|---|---|---|---|
 | T-001 | Version lock + environment proof | [x] | s-20261030-1823 | none |
 | T-002 | Repo skeleton + Docker Compose | [x] | s-20261030-1914 | T-001 |
-| T-003 | FastAPI skeleton + Prisma client + health | [ ] | - | T-002 |
+| T-003 | FastAPI skeleton + Prisma client + health | [x] | s-20261030-1934 | T-002 |
 | T-004 | Frontend scaffold + API proxy + health page | [ ] | - | T-002 |
 | T-005 | Docs set + AGENTS.md contract | [x] | manager | none |
 | T-006 | OpenAPI → TypeScript types + typed fetch client | [ ] | - | T-003, T-004 |

@@ -18,7 +18,7 @@ up work without re-researching anything.
 |---|---|---|
 | T-001 | Version lock + environment proof | done |
 | T-002 | Repo skeleton + Docker Compose | done |
-| T-003 | FastAPI skeleton + Prisma client + health | ready (skeleton exists; this task makes it production-shaped) |
+| T-003 | FastAPI skeleton + Prisma client + health | done |
 | T-004 | Frontend scaffold + API proxy + health page | ready |
 | T-005 | Docs set + AGENTS.md contract | done |
 | T-006 | OpenAPI → TypeScript types + typed fetch client | ready |
