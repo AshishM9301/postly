@@ -83,6 +83,18 @@ Legend: `[ ]` ready · `[~]` in-progress · `[>]` review · `[x]` done · `[!]` 
 
 - **Only Q0 and Q1 have task files written.** Q2–Q5 are planned; the manager writes the task files when the
   quest opens. Do not start a planned task without a file.
+- New task files are created by the manager from [`_TEMPLATE.md`](_TEMPLATE.md).
 - Raw ideas go to [`../BACKLOG.md`](../BACKLOG.md), not here.
 - A task is **done** only after the manager re-runs its `## Done when` checks and appends a
   `## Manager review` verdict. Workers never mark their own task done.
+- A **blocked** task is a first-class outcome, not a failure: the worker writes a `## Blocker`, the manager
+  reproduces it and creates a fix task. See `AGENTS.md` §12.
+
+## Error log
+
+One row per failure that went through the escalation loop (`AGENTS.md` §12). The manager owns this table.
+
+| # | found in | symptom | manager's own diagnosis | fix | status |
+|---|---|---|---|---|---|
+| 1 | T-001 | `docker compose up` could not bind Postgres to 5432; a chained `&&` aborted at `prisma migrate status` | Two separate things: (a) host port 5432 was held by an unrelated container `coursehub-postgres` (`postgres:18-alpine`); (b) `prisma migrate status` **exits 1 when migrations are pending**, which silently broke a `&&` chain | (a) stopped that container (data intact) and gave Postly its own `postgres:16.15-alpine`; (b) documented in `docs/research/00-versions.md` §10 | closed |
+| 2 | T-001 | worker could not find a database to migrate against | The task's suggested command put the spike DB on **5433** precisely because 5432 was occupied — the worker had already avoided the clash; the manager had misread the setup | none needed | closed |

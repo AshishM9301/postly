@@ -59,6 +59,11 @@ Manager and worker run in **separate sessions**. All handoff happens through fil
 8. Set `status: review`. Stop. Do not mark it done — the manager does that.
 ```
 
+**If you hit an error or a blocker** (the stack breaks, a dependency fights back, the task turns out to be
+impossible): do **not** fix it outside the task's scope and do **not** fake a pass. Append a `## Blocker`
+section instead (template in §6 and in §12), set `status: blocked`, update the board row, and stop. The
+blocker report *is* your deliverable. The manager will diagnose it and create a follow-up task.
+
 **Session label:** `s-<yyyymmdd-hhmm>` (e.g. `s-20261030-1412`). Put it in `owner:`.
 
 ## 5. Manager procedure
@@ -76,6 +81,8 @@ Manager and worker run in **separate sessions**. All handoff happens through fil
 4. If the user gives a new idea → add it to `docs/tasks/BACKLOG.md` as a one-liner, then promote it
    into a quest/task when it is worth doing.
 5. Keep quests honest: update `docs/quests/Q*.md` status + task table.
+6. When a task comes back `blocked`, run the **error escalation loop (§12)**: reproduce the failure
+   yourself, write your own diagnosis next to the worker's, then create a new task for the fix.
 ```
 
 **The manager must be able to verify a task it never saw built.** That is why every task states
@@ -116,6 +123,23 @@ DO NOT re-research these.
 - verified: command → actual result (paste the real output line)
 - issues: what broke, what's left
 - next: suggested next task
+
+## Blocker                        (only when the worker is stuck — see §12)
+### 2026-10-30 · worker s-1412
+- failed: `command` → the actual error, pasted
+- worker diagnosis: what the worker thinks is wrong
+- tried: what was attempted
+- needs: a decision | a new task | more info
+
+## Manager diagnosis              (manager only — see §12)
+### 2026-10-30 · manager s-1500
+- reproduced: yes | no  → `command` → output
+- worker said: their diagnosis in one line
+- manager found: the manager's own diagnosis
+- combined conclusion: where they agree, where they differ, and the truth
+- root cause: one paragraph
+- fix approach: what the fix is
+- new task: T-0xx
 
 ## Manager review
 ### 2026-10-30 · manager s-1500
@@ -233,3 +257,65 @@ postly/
 - The Prisma stack is **verified**: prisma-client-py 0.15.0 + Prisma CLI 5.19.0 works on `python:3.13-slim`
   and on local Python 3.14.7. Details in `docs/research/00-versions.md` §4 and §10.
 - Versions are already pinned and researched in `docs/research/00-versions.md` — do not re-derive them.
+- The repo is a git repository on branch `main`. **The manager may commit**; workers must not.
+
+## 12. Error escalation loop (worker error → manager diagnosis → new task)
+
+Nothing gets hand-waved. When something breaks, it goes through this loop. It is the same loop the manager
+already used once, for the T-001 database confusion.
+
+### Step 1 — Worker reports the failure
+The worker does **not** fix it outside the task's scope and does **not** fake a pass. It appends to the
+task file:
+
+```markdown
+## Blocker
+### 2026-10-30 · worker s-1412
+- failed: `command` → the actual error, pasted
+- worker diagnosis: what the worker thinks is wrong
+- tried: what was attempted
+- needs: a decision | a new task | more info
+```
+
+Then sets `status: blocked`, updates the board row to `[!]`, and **stops**. The blocker report is the
+deliverable this time — a clean blocker beats a messy half-fix.
+
+### Step 2 — Manager reproduces it, independently
+Never accept the worker's diagnosis on trust. Run the failing command yourself, read the actual code, and
+form your own diagnosis. If you cannot reproduce it, say so — do not guess.
+
+### Step 3 — Manager writes the combined diagnosis
+In the same task file:
+
+```markdown
+## Manager diagnosis
+### 2026-10-30 · manager s-1500
+- reproduced: yes | no  → `command` → output
+- worker said: their diagnosis in one line
+- manager found: the manager's own diagnosis
+- combined conclusion: where they agree, where they differ, and the truth
+- root cause: one paragraph
+- fix approach: what the fix is
+- new task: T-0xx
+```
+
+### Step 4 — Manager creates a new task for the fix
+- A **real file**: `docs/tasks/T-0xx-<slug>.md`, created from `docs/tasks/_TEMPLATE.md`.
+- It has a goal, runnable `## Done when` checks, a `files:` list, and `depends:` pointing at the task that
+  exposed the bug.
+- Link it from `docs/tasks/README.md` (board row + error log) and from the original task file.
+- The original task stays `blocked`, or is closed as `done` if the bug turned out to be outside its scope.
+  It is never silently left `ready`.
+
+### Step 5 — Worker fixes it
+The worker picks up the new task, fixes the bug, appends its report, and sets `status: review`. The manager
+verifies it like any other task — and then closes the loop by appending the outcome to the original task's
+`## Manager diagnosis` section.
+
+### Rules
+- The worker's diagnosis is **input**, not truth. The manager's own reproduction decides.
+- Where the two disagree, the manager says so explicitly and shows the evidence.
+- "Not reproduced" is a legitimate outcome — record what was tried and move on. Guessing is not allowed.
+- Every failure gets a task id, so the error log in `docs/tasks/README.md` stays countable.
+- The same loop applies when the *manager's own* verification fails: the manager writes the diagnosis and
+  creates the fix task.
