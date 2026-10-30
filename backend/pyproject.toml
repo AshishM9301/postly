@@ -30,7 +30,7 @@ moderation = [
 ]
 
 [tool.setuptools]
-packages = []
+packages = ["app"]
 
 [tool.prisma]
 prisma_version = "5.19.0"

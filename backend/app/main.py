@@ -5,8 +5,8 @@ app/db/client.py (prisma singleton), app/api/v1/ routers and tests.
 For now: one health endpoint that really talks to the database.
 """
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 from fastapi import FastAPI
 from prisma import Prisma

@@ -1,0 +1,38 @@
+# Repo-root build context guard. The api image builds from ./backend (which has its
+# own .dockerignore); this keeps any future root-context build from shipping secrets.
+.git/
+.env
+.env.*
+!.env.example
+
+# python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+build/
+dist/
+*.egg-info/
+
+# node / frontend build output
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
+# runtime data
+backend/media/
+backend/media-local/
+backend/prisma/generated/
+
+# docs / editor / os
+docs/tasks/*.tmp
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

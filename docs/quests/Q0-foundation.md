@@ -17,7 +17,7 @@ up work without re-researching anything.
 | ID | Task | Status |
 |---|---|---|
 | T-001 | Version lock + environment proof | done |
-| T-002 | Repo skeleton + Docker Compose | ready (mostly built during T-001 review — see the task's manager notes) |
+| T-002 | Repo skeleton + Docker Compose | done |
 | T-003 | FastAPI skeleton + Prisma client + health | ready (skeleton exists; this task makes it production-shaped) |
 | T-004 | Frontend scaffold + API proxy + health page | ready |
 | T-005 | Docs set + AGENTS.md contract | done |

@@ -1,0 +1,28 @@
+# Never send secrets or local state into the image build.
+.env
+.env.*
+!.env.example
+
+# python virtualenv / caches / build artefacts
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+build/
+dist/
+*.egg-info/
+
+# local media storage (created inside the image, mounted at runtime)
+media/
+media-local/
+
+# editor / os
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
