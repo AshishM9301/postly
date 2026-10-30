@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools==84.2.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "postly-api"
+version = "0.1.0"
+description = "Postly local community problems API"
+requires-python = ">=3.11"
+dependencies = [
+    "prisma==0.15.0",
+    "fastapi==0.162.0",
+    "uvicorn==0.54.0",
+    "pydantic==2.14.2",
+    "httpx==0.28.1",
+    "python-multipart==0.0.32",
+    "pyjwt==2.15.1",
+    "firebase-admin==7.7.0",
+    "argon2-cffi==25.1.0",
+    "pillow==13.0.0",
+    "pywebpush==2.5.0",
+    "pytest==9.2.0",
+    "ruff==0.17.3",
+]
+
+[project.optional-dependencies]
+moderation = [
+    "transformers==5.22.1",
+    "torch==2.15.0",
+]
+
+[tool.setuptools]
+packages = []
+
+[tool.prisma]
+prisma_version = "5.19.0"
+expected_engine_version = "5fe21811a6ba0b952a3bc71400666511fe3b902f"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["app", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

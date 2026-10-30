@@ -1,0 +1,24 @@
+# Normalise line endings: the backend runs in Linux containers with the source
+# bind-mounted, so the repo must store LF. Without this, Windows checkouts write
+# CRLF and shell scripts break inside the container.
+* text=auto eol=lf
+
+# Windows-only scripts
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# binaries
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.mp4 binary
+*.mov binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pbf binary
+*.pkl binary
+*.safetensors binary

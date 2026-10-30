@@ -1,0 +1,18 @@
+// PLACEHOLDER schema for the T-001 environment proof only.
+// T-010 replaces this file with the real 19-model Postly schema.
+// Do not build product code against SpikeRow.
+
+generator client {
+  provider = "prisma-client-py"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SpikeRow {
+  id        Int      @id @default(autoincrement())
+  note      String
+  createdAt DateTime @default(now())
+}

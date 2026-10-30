@@ -1,0 +1,59 @@
+name: postly
+
+services:
+  db:
+    image: postgres:16.15-alpine
+    container_name: postly-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postly}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postly}
+      POSTGRES_DB: ${POSTGRES_DB:-postly}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postly_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postly} -d ${POSTGRES_DB:-postly}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  api:
+    build:
+      context: ./backend
+    container_name: postly-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # inside the compose network the db host is the service name, not localhost
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postly}:${POSTGRES_PASSWORD:-postly}@db:5432/${POSTGRES_DB:-postly}
+      PYTHONPATH: /app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      # source is mounted for live reload; the installed prisma client lives in site-packages
+      - ./backend:/app
+      - postly_media:/app/media
+    command: >
+      sh -c "python -m prisma migrate deploy &&
+             python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request;urllib.request.urlopen('http://localhost:8000/api/v1/health')"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+volumes:
+  postly_pgdata:
+  postly_media:
