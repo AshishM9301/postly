@@ -169,3 +169,26 @@ Non-root fix (2026-10-30, worker s-20261030-1914) — later tasks will hit this:
   - **CI note:** `pytest` exits 5 when zero tests are collected. Do not treat exit 5 as a crash in scripts.
 - next: T-003 — `docs/tasks/T-003-fastapi-skeleton-and-prisma-client.md` is ready for the worker.
 
+### 2026-10-30 · manager follow-up (owner request: "set the packages properly")
+The worker set `packages = ["app"]`, which satisfies the literal words of the task but not its intent — a
+literal package list installs **only** the top-level package, so `app.core`, `app.db`, `app.api.v1` and
+friends would be silently excluded from the install the moment T-003 creates them. Fixed:
+
+- `backend/pyproject.toml` → `[tool.setuptools.packages.find]` with `where = ["."]`, `include = ["app*"]`.
+- `backend/Dockerfile` → `pip install --no-cache-dir -e .` (editable) instead of a second copy in
+  site-packages. The Dockerfile comment records the dev/production split.
+- `docs/ARCHITECTURE.md` §10 and `docs/DECISIONS.md` AD-010 document the decision.
+
+Verified after rebuilding the image:
+- `docker compose exec -T -w /tmp api python -c "import app, app.main; ..."` → `/app/app/__init__.py`,
+  `/app/app/main.py` → **one** copy of the source, resolved through the editable finder.
+- editable markers present: `__editable__.postly_api-0.1.0.pth` + `__editable___postly_api_0_1_0_finder.py`.
+- wheel built from a throwaway copy with a probe subpackage contains `app/__init__.py`, `app/core/__init__.py`,
+  `app/main.py` → subpackages **are** discovered (the old literal list would have dropped `app/core`).
+- a probe subpackage dropped into the live bind mount imports immediately, with **no rebuild**:
+  `import app._probe.mod` → `IMPORT OK -> 42 from /app/app/_probe/mod.py` → so T-003 can add
+  `app/core/`, `app/db/`, `app/api/v1/` and use them straight away.
+- stack still healthy after the rebuild: `{"status":"ok","db":"ok"}`, `Database schema is up to date!`,
+  `ruff check .` → `All checks passed!`, `3 files already formatted`, `whoami` → `appuser`.
+- probe removed; `git status` shows only the three intended edits.
+

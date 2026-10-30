@@ -23,7 +23,17 @@ WORKDIR /app
 # pyproject.toml now declares it as the package.
 COPY pyproject.toml ./
 COPY app ./app
-RUN pip install --no-cache-dir .
+
+# Editable install on purpose:
+#   * there is exactly ONE copy of the source - the bind-mounted /app in dev, the
+#     image's own /app when run standalone. The installed copy can never go stale
+#     and can never shadow the bind mount.
+#   * `pip install .` would put a second copy in site-packages; with PYTHONPATH=/app
+#     the bind mount would win anyway, so the site-packages copy would be dead
+#     weight that drifts out of sync.
+# For a production image, replace with a non-editable `pip install .` so the
+# package is baked into the image.
+RUN pip install --no-cache-dir -e .
 
 COPY . .
 

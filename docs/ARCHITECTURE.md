@@ -120,3 +120,23 @@ The heavy local models run in a **separate worker process/container** so inferen
 
 Everything is localhost-only for now. Turnstile/captcha is deliberately absent; a captcha is added at
 public launch when there is a real domain to protect.
+
+## 10. How the source reaches the container
+
+**One copy of the source, always.** The api image installs the package **editable** (`pip install -e .`),
+so `site-packages` holds a pointer to `/app` rather than a second copy of the code.
+
+- In dev, `/app` is the bind mount of `./backend`, so editing a file on the host is instantly the code
+  that runs. No rebuild, and no stale copy.
+- Running the image standalone (no bind mount), `/app` is the source copied into the image — the editable
+  pointer resolves to it and everything still works.
+- For a **production** image, swap the editable install for a normal `pip install .` so the package is
+  baked in and `/app` is not bind-mounted.
+
+Package discovery is `setuptools.packages.find` with `include = ["app*"]`, so `app` and every subpackage
+(`app.core`, `app.db`, `app.api.v1`, `app.schemas`, …) are always installed. A literal package list would
+silently drop subpackages as the tree grows.
+
+The Prisma client is the one thing that is **not** in `/app`: it is generated into `site-packages/prisma`,
+which is why that directory is chowned to the runtime user — `python -m prisma generate` has to be runnable
+inside the live container.

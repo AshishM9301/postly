@@ -4,6 +4,20 @@ ADR-style. Newest first. Each entry: what was decided, why, and what it costs us
 
 ---
 
+## AD-010 — Editable install + find-based package discovery
+**Decision.** The api image installs the package **editable** (`pip install -e .`), and setuptools discovers
+packages with `packages.find` + `include = ["app*"]`.
+**Why.** Two separate problems. (1) A literal `packages = ["app"]` installs only the top-level package — the
+moment `app/core/`, `app/db/` or `app/api/v1/` exist they would be silently missing from the install.
+(2) `pip install .` puts a *second* copy of the source in site-packages, which the bind mount shadows anyway
+in dev — so it is dead weight that drifts out of sync. An editable install keeps exactly one copy of the
+source and lets a brand-new subpackage be imported without rebuilding the image (verified).
+**Cost.** A production image should switch back to a non-editable `pip install .` so the package is baked in
+and `/app` is not bind-mounted. The Prisma client is the one thing that must stay writable in
+site-packages, because it is regenerated inside the live container.
+
+---
+
 ## AD-009 — Three identity modes, not one
 **Decision.** Google / pseudonymous / ghost.
 **Why.** The owner wants people to post freely without legal exposure, but the app also needs reputation

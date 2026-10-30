@@ -29,8 +29,11 @@ moderation = [
     "torch==2.15.0",
 ]
 
-[tool.setuptools]
-packages = ["app"]
+# Package discovery: `app` plus every subpackage (app.core, app.db, app.api.v1, ...).
+# A literal list would silently exclude subpackages as the tree grows.
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
 
 [tool.prisma]
 prisma_version = "5.19.0"
