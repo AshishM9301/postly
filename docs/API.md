@@ -172,7 +172,7 @@ Shared query params: `area_id`, `category_id`, `limit`, `cursor`, `sort`.
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/health` | `{ "status": "ok", "db": "ok", "version": "0.1.0" }` |
+| GET | `/health` | `{ "status": "ok", "db": "ok" }` (`503` → `{ "status": "degraded", "db": "down" }`) |
 | GET | `/openapi.json` | the machine-readable spec (also served at `/docs`) |
 
 ## 14. Error codes

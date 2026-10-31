@@ -31,10 +31,31 @@ talks to the API cross-origin, so no CORS headers and no API URL leaks into the 
 npm run dev        # next dev --turbo   (http://localhost:3000)
 npm run build      # production build
 npm run start      # serve the production build
+npm run api:types  # regenerate src/lib/api/types.ts from the running API (host only)
 npm run lint       # next lint
 npm run typecheck  # tsc --noEmit
 npm run check      # lint + typecheck
 ```
+
+## Regenerate API types
+
+`src/lib/api/types.ts` is generated from the API's OpenAPI document and committed. Run the generator on the
+**host**, where the API is published on `http://localhost:8000`:
+
+```bash
+docker compose up -d api   # the spec must be reachable
+npm run api:types
+```
+
+The script reads `API_INTERNAL_URL` (default `http://localhost:8000`) and exits `1` with a clear message when
+the API is unreachable. Restart the `api` service after changing a route so `/openapi.json` reflects it.
+
+Codegen does **not** work inside the production `web` image: the runtime image carries no `scripts/` and no
+codegen tool. Do not add it there — a container with the source tree can point at the spec with
+`API_INTERNAL_URL=http://api:8000`.
+
+`src/lib/api/client.ts` is the only file under `src/` that may call `fetch`. Add endpoint methods there, not
+in components. The codegen script in `scripts/` is exempt: it talks to the spec, not to the API.
 
 ## Docker
 
@@ -48,11 +69,12 @@ docker compose up -d web     # or just `docker compose up -d` for the whole stac
 
 ## Home page
 
-`src/app/page.tsx` is a server component with `export const dynamic = "force-dynamic"`. It fetches its own
-`/api/v1/health` so the request travels through the rewrite above (no CORS, no API URL in the browser) and
-renders the API + database status. Fetch errors are caught and rendered as `unreachable` instead of throwing.
+`src/app/page.tsx` is a server component with `export const dynamic = "force-dynamic"`. It calls the typed
+client in `src/lib/api/` with an **absolute** base URL (`${API_INTERNAL_URL}/api/v1`) taken from the
+server-only `API_INTERNAL_URL` env var, so it reaches the API directly on the compose network (or
+`http://localhost:8000` on the host). The base URL never comes from request headers. Errors are caught and
+rendered as `unreachable` instead of throwing.
 
 ## Coming later
 
-- T-006 — OpenAPI-generated TypeScript types + a typed fetch client.
 - T-020 — TanStack Query, shadcn/ui, feed UI, composer, vote buttons.

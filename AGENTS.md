@@ -248,7 +248,7 @@ postly/
 
 ## 11. Current state
 
-- **Q0 Foundation is in progress.** See `docs/tasks/README.md`.
+- **Q0 Foundation is done** (T-001 … T-006). Q1 · Core posting loop is next — see `docs/tasks/README.md`.
 - The **compose stack exists and runs**: `db` (`postgres:16.15-alpine`) + `api` (`python:3.13-slim` with
   `libatomic1`) + `web` (`node:24.18.0-alpine`), all healthy, migrations applied on boot,
   `GET /api/v1/health` → `{"status":"ok","db":"ok"}`, `http://localhost:3000` serves the web app.
@@ -257,6 +257,10 @@ postly/
 - `apps/web` **exists** (T-004): Next.js 15.5.28 App Router, Tailwind 4, TypeScript 5.9.3, pure REST client
   — no tRPC, no NextAuth, no Prisma. It proxies `/api/:path*` → `API_INTERNAL_URL` (compose: `http://api:8000`,
   host dev: `http://localhost:8000`). Details in `docs/research/00-versions.md` §2.
+- **The frontend's typed API door** (T-006): `apps/web/src/lib/api/` holds the generated `types.ts` (from the
+  live OpenAPI spec, regenerate with `npm run api:types` **on the host**) and `client.ts` — the **only** file
+  under `src/` allowed to call `fetch`. Server code must pass an absolute base URL built from the trusted
+  server-only `API_INTERNAL_URL`; never from the request's `host` / `x-forwarded-host` headers.
 - The Prisma stack is **verified**: prisma-client-py 0.15.0 + Prisma CLI 5.19.0 works on `python:3.13-slim`
   and on local Python 3.14.7. Details in `docs/research/00-versions.md` §4 and §10.
 - Versions are already pinned and researched in `docs/research/00-versions.md` — do not re-derive them.

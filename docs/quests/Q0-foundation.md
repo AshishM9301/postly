@@ -3,7 +3,7 @@
 **Goal:** `docker compose up` gives a running Postgres + FastAPI + Next.js, and any fresh session can pick
 up work without re-researching anything.
 
-**Status:** in progress
+**Status:** done
 
 **Done when**
 - `docker compose up -d` brings up db, api and web with healthy status.
@@ -21,7 +21,7 @@ up work without re-researching anything.
 | T-003 | FastAPI skeleton + Prisma client + health | done |
 | T-004 | Frontend scaffold + API proxy + health page | done |
 | T-005 | Docs set + AGENTS.md contract | done |
-| T-006 | OpenAPI → TypeScript types + typed fetch client | ready |
+| T-006 | OpenAPI → TypeScript types + typed fetch client | done |
 
 **Notes**
 - T-001 is the gate. If the pinned Prisma/Python combination fails, the fallback (keep `schema.prisma`,
@@ -32,3 +32,9 @@ up work without re-researching anything.
   optional and must match `docs/research/00-versions.md`.
 - The compose stack (`db` + `api` + `web`) is running and healthy. `web` joined in T-004 and serves
   `http://localhost:3000`, proxying `/api/:path*` to the API.
+- **Every "Done when" above was re-verified on 2026-10-31** during the T-006 review: all three services
+  healthy from a cold `docker compose up -d`, `GET /api/v1/health` → `{"status":"ok","db":"ok"}`,
+  `pytest -q` → `1 passed`, and `lint` + `typecheck` + `build` all green.
+- T-006 added the typed API door: `apps/web/src/lib/api/` holds the generated `types.ts` (from the live
+  OpenAPI spec, via `npm run api:types`) and the only `fetch` call site in `src/`. The home page now talks
+  to the API through it, using the trusted server-side `API_INTERNAL_URL` — never request headers.

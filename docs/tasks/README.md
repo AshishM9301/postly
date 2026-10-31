@@ -17,7 +17,7 @@ Legend: `[ ]` ready · `[~]` in-progress · `[>]` review · `[x]` done · `[!]` 
 | T-003 | FastAPI skeleton + Prisma client + health | [x] | s-20261030-1934 | T-002 |
 | T-004 | Frontend scaffold + API proxy + health page | [x] | s-20261030-2003 | T-002 |
 | T-005 | Docs set + AGENTS.md contract | [x] | manager | none |
-| T-006 | OpenAPI → TypeScript types + typed fetch client | [ ] | - | T-003, T-004 |
+| T-006 | OpenAPI → TypeScript types + typed fetch client | [x] | s-20261031-1044 | T-003, T-004 |
 
 ## Q1 · Core posting loop — *goal: post a photo problem in a Delhi area, vote, comment*
 

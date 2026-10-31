@@ -42,7 +42,7 @@ scaffold choose; do not force newer.
 | `firebase` | 13.1.0 | web SDK (Google sign-in) |
 | `blurhash` | 2.0.5 | blurred placeholder for images |
 | `shadcn` | 4.x | CLI only, components are copied into the repo |
-| `openapi-typescript` | latest stable | generates TS types from the FastAPI spec |
+| `openapi-typescript` | 7.13.0 | generates TS types from the FastAPI spec (installed in T-006) |
 
 Node on this machine: **v24.18.0** (satisfies Next 15 and Next 16's `>=20.9`).
 
@@ -80,8 +80,11 @@ The CLI scaffolded the files but aborted during install with `TypeError: i.repla
 | `@types/react` / `@types/react-dom` | 19.3.0 | |
 
 Not installed yet (later tasks): `@tanstack/react-query` (T-020), `firebase` (T-011), `blurhash` (T-016),
-`shadcn` (T-020), `openapi-typescript` (T-006). `npm install` reports 5 advisories in the scaffold's
-transitive tree; they were not force-fixed because that changes pinned versions.
+`shadcn` (T-020). `npm install` reports 5 advisories in the scaffold's transitive tree; they were not
+force-fixed because that changes pinned versions.
+
+`openapi-typescript` 7.13.0 was installed in T-006 as an exact devDependency (npm `latest: 7.13.0`,
+`next: 7.0.0-rc.1` — the pin is stable, not a prerelease).
 
 The web image uses `node:24.18.0-alpine` (multi-stage: deps → builder → non-root `nextjs` runner).
 The `/api/:path*` rewrite target comes from `API_INTERNAL_URL` (`http://api:8000` in compose,

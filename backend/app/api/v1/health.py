@@ -1,14 +1,26 @@
 """Health endpoint: reports the real database status."""
 
+from typing import Literal
+
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 from app.db.client import db
 
 router = APIRouter(tags=["health"])
 
 
-@router.get("/health")
+class HealthResponse(BaseModel):
+    status: Literal["ok", "degraded"]
+    db: Literal["ok", "down"]
+
+
+@router.get(
+    "/health",
+    response_model=HealthResponse,
+    responses={503: {"model": HealthResponse}},
+)
 async def health() -> JSONResponse:
     try:
         await db.query_raw("SELECT 1")

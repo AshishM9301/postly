@@ -1,4 +1,5 @@
-import { headers } from "next/headers";
+import { env } from "~/env";
+import { createApiClient } from "~/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -7,20 +8,12 @@ type Health = {
   db: string;
 };
 
-async function fetchHealth(): Promise<Health> {
-  const requestHeaders = await headers();
-  const host =
-    requestHeaders.get("x-forwarded-host") ??
-    requestHeaders.get("host") ??
-    "localhost:3000";
-  const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
+const apiBaseUrl = `${env.API_INTERNAL_URL.replace(/\/+$/, "")}/api/v1`;
+const api = createApiClient({ baseUrl: apiBaseUrl });
 
+async function fetchHealth(): Promise<Health> {
   try {
-    const response = await fetch(`${protocol}://${host}/api/v1/health`, {
-      cache: "no-store",
-    });
-    const data = (await response.json()) as Health;
-    return { status: data.status, db: data.db };
+    return await api.health();
   } catch {
     return { status: "unreachable", db: "unknown" };
   }
