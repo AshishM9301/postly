@@ -23,7 +23,7 @@ Legend: `[ ]` ready · `[~]` in-progress · `[>]` review · `[x]` done · `[!]` 
 
 | ID | Task | Status | Owner | Depends |
 |---|---|---|---|---|
-| T-010 | Prisma schema (19 models) + migration + seed categories | [ ] | - | T-003 |
+| T-010 | Prisma schema (17 models) + migration + seed categories | [x] | s-20261031-1134 | T-003 |
 | T-011 | Auth: Google + pseudonymous + ghost + session middleware | [ ] | - | T-010, T-004 |
 | T-012 | Ghost crypto helpers + local key vault + export/import | [ ] | - | T-004 |
 | T-013 | Delhi area seed script (pincode.csv, CC0) | [ ] | - | T-010 |

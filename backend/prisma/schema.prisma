@@ -1,6 +1,5 @@
-// PLACEHOLDER schema for the T-001 environment proof only.
-// T-010 replaces this file with the real 19-model Postly schema.
-// Do not build product code against SpikeRow.
+// Postly data model. This file is the single source of truth for the database.
+// Docs: docs/DATA_MODEL.md. Columns are snake_case in Postgres via @map.
 
 generator client {
   provider = "prisma-client-py"
@@ -11,8 +10,401 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model SpikeRow {
-  id        Int      @id @default(autoincrement())
-  note      String
-  createdAt DateTime @default(now())
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum PostStatus {
+  OPEN
+  IN_PROGRESS
+  SOLVED
+  CLOSED
+}
+
+enum BlameCategory {
+  MUNICIPALITY
+  CONTRACTOR
+  UTILITY
+  POLICE
+  SCHOOL
+  LANDLORD
+  UNKNOWN
+}
+
+enum ModerationState {
+  CLEAN
+  FLAGGED
+  HIDDEN
+}
+
+enum ModerationStatus {
+  PENDING
+  FLAGGED
+  CONFIRMED
+  REJECTED
+  APPROVED
+}
+
+enum VoteTarget {
+  POST
+  COMMENT
+  BLAME
+}
+
+enum MediaKind {
+  IMAGE
+  VIDEO
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  ACTIONED
+  DISMISSED
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id             String   @id @default(cuid()) @map("id")
+  alias          String   @unique @map("alias")
+  firebaseUid    String?  @unique @map("firebase_uid")
+  secretHash     String?  @map("secret_hash")
+  isPseudonymous Boolean  @default(false) @map("is_pseudonymous")
+  isGhost        Boolean  @default(false) @map("is_ghost")
+  avatarUrl      String?  @map("avatar_url")
+  bio            String?  @map("bio")
+  karma          Int      @default(0) @map("karma")
+  isAdmin        Boolean  @default(false) @map("is_admin")
+  isBanned       Boolean  @default(false) @map("is_banned")
+  bannedReason   String?  @map("banned_reason")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  sessions          Session[]
+  posts             Post[]
+  comments          Comment[]
+  votes             Vote[]
+  blameVotes        BlameVote[]
+  following         Follow[]           @relation("FollowFollower")
+  followers         Follow[]           @relation("FollowFollowing")
+  areaFollows       AreaFollow[]
+  reveals           UserReveal[]
+  notifications     Notification[]
+  pushSubscriptions PushSubscription[]
+  reportsMade       Report[]           @relation("ReportReporter")
+  reportsHandled    Report[]           @relation("ReportHandler")
+  moderationReviews ModerationRecord[] @relation("ModerationReviewer")
+
+  @@map("users")
+}
+
+model Session {
+  id        String    @id @default(cuid()) @map("id")
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  createdAt DateTime  @default(now()) @map("created_at")
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+// ---------------------------------------------------------------------------
+// Geography
+// ---------------------------------------------------------------------------
+
+model Area {
+  id           String  @id @default(cuid()) @map("id")
+  pincode      String  @unique @map("pincode")
+  name         String  @map("name")
+  district     String  @map("district")
+  circle       String? @map("circle")
+  region       String? @map("region")
+  division     String? @map("division")
+  lat          Float   @map("lat")
+  lng          Float   @map("lng")
+  radiusMeters Int     @default(1500) @map("radius_meters")
+  officeCount  Int     @default(1) @map("office_count")
+  isActive     Boolean @default(true) @map("is_active")
+
+  posts       Post[]
+  areaFollows AreaFollow[]
+
+  @@map("areas")
+}
+
+// ---------------------------------------------------------------------------
+// Content
+// ---------------------------------------------------------------------------
+
+model Category {
+  id        String  @id @default(cuid()) @map("id")
+  name      String  @map("name")
+  slug      String  @unique @map("slug")
+  icon      String  @map("icon")
+  color     String  @map("color")
+  sortOrder Int     @map("sort_order")
+  isActive  Boolean @default(true) @map("is_active")
+
+  posts Post[]
+
+  @@map("categories")
+}
+
+model Post {
+  id              String          @id @default(uuid()) @map("id")
+  authorId        String?         @map("author_id")
+  ghostOwnerKey   String?         @map("ghost_owner_key")
+  alias           String          @map("alias")
+  isAnonymous     Boolean         @map("is_anonymous")
+  areaId          String          @map("area_id")
+  categoryId      String          @map("category_id")
+  title           String          @map("title")
+  body            String          @map("body")
+  status          PostStatus      @map("status")
+  blameCategory   BlameCategory?  @map("blame_category")
+  blameLabel      String?         @map("blame_label")
+  blameVoteCount  Int             @default(0) @map("blame_vote_count")
+  moderationState ModerationState @map("moderation_state")
+  upvoteCount     Int             @default(0) @map("upvote_count")
+  downvoteCount   Int             @default(0) @map("downvote_count")
+  commentCount    Int             @default(0) @map("comment_count")
+  viewCount       Int             @default(0) @map("view_count")
+  lat             Float?          @map("lat")
+  lng             Float?          @map("lng")
+  expiresAt       DateTime?       @map("expires_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  author     User?       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  area       Area        @relation(fields: [areaId], references: [id])
+  category   Category    @relation(fields: [categoryId], references: [id])
+  media      Media[]
+  comments   Comment[]
+  blameVotes BlameVote[]
+  views      PostView[]
+
+  @@index([areaId, createdAt])
+  @@index([createdAt])
+  @@index([moderationState])
+  @@index([areaId, moderationState, createdAt])
+  @@index([ghostOwnerKey])
+  @@map("posts")
+}
+
+model Media {
+  id              String          @id @default(cuid()) @map("id")
+  postId          String          @map("post_id")
+  kind            MediaKind       @map("kind")
+  path            String          @map("path")
+  thumbPath       String?         @map("thumb_path")
+  blurHash        String?         @map("blur_hash")
+  mimeType        String          @map("mime_type")
+  bytes           Int             @map("bytes")
+  width           Int?            @map("width")
+  height          Int?            @map("height")
+  durationSec     Float?          @map("duration_sec")
+  moderationState ModerationState @map("moderation_state")
+  nsfwScore       Float?          @map("nsfw_score")
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@map("media")
+}
+
+model Comment {
+  id              String          @id @default(uuid()) @map("id")
+  postId          String          @map("post_id")
+  parentId        String?         @map("parent_id")
+  authorId        String?         @map("author_id")
+  ghostOwnerKey   String?         @map("ghost_owner_key")
+  alias           String          @map("alias")
+  body            String          @map("body")
+  depth           Int             @default(0) @map("depth")
+  moderationState ModerationState @map("moderation_state")
+  upvoteCount     Int             @default(0) @map("upvote_count")
+  downvoteCount   Int             @default(0) @map("downvote_count")
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  post    Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent  Comment?  @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("CommentThread")
+  author  User?     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+  @@index([parentId])
+  @@index([ghostOwnerKey])
+  @@map("comments")
+}
+
+// ---------------------------------------------------------------------------
+// Interaction
+// ---------------------------------------------------------------------------
+
+model Vote {
+  id         String     @id @default(cuid()) @map("id")
+  targetType VoteTarget @map("target_type")
+  targetId   String     @map("target_id")
+  voterId    String?    @map("voter_id")
+  voterKey   String     @map("voter_key")
+  value      Int        @map("value")
+
+  voter User? @relation(fields: [voterId], references: [id], onDelete: Cascade)
+
+  @@unique([targetType, targetId, voterKey])
+  @@index([voterId])
+  @@map("votes")
+}
+
+model BlameVote {
+  id        String   @id @default(cuid()) @map("id")
+  postId    String   @map("post_id")
+  voterId   String?  @map("voter_id")
+  voterKey  String   @map("voter_key")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post  Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  voter User? @relation(fields: [voterId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, voterKey])
+  @@index([voterId])
+  @@map("blame_votes")
+}
+
+model Follow {
+  id          String   @id @default(cuid()) @map("id")
+  followerId  String   @map("follower_id")
+  followingId String   @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  follower  User @relation("FollowFollower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("FollowFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+model AreaFollow {
+  id        String   @id @default(cuid()) @map("id")
+  userId    String   @map("user_id")
+  areaId    String   @map("area_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  area Area @relation(fields: [areaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, areaId])
+  @@index([areaId])
+  @@map("area_follows")
+}
+
+// ---------------------------------------------------------------------------
+// Safety
+// ---------------------------------------------------------------------------
+
+model ModerationRecord {
+  id          String           @id @default(cuid()) @map("id")
+  targetType  String           @map("target_type")
+  targetId    String           @map("target_id")
+  category    String           @map("category")
+  severity    String           @map("severity")
+  score       Float            @map("score")
+  provider    String           @map("provider")
+  model       String           @map("model")
+  rawResponse Json?            @map("raw_response")
+  status      ModerationStatus @map("status")
+  reviewedBy  String?          @map("reviewed_by")
+  reviewedAt  DateTime?        @map("reviewed_at")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  reviewer User? @relation("ModerationReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  @@index([targetType, targetId])
+  @@index([status])
+  @@map("moderation_records")
+}
+
+model UserReveal {
+  id         String   @id @default(cuid()) @map("id")
+  userId     String   @map("user_id")
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId])
+  @@map("user_reveals")
+}
+
+model Report {
+  id         String       @id @default(cuid()) @map("id")
+  targetType String       @map("target_type")
+  targetId   String       @map("target_id")
+  reporterId String?      @map("reporter_id")
+  reason     String       @map("reason")
+  details    String?      @map("details")
+  status     ReportStatus @map("status")
+  handledBy  String?      @map("handled_by")
+  handledAt  DateTime?    @map("handled_at")
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  reporter User? @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  handler  User? @relation("ReportHandler", fields: [handledBy], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([targetType, targetId])
+  @@map("reports")
+}
+
+// ---------------------------------------------------------------------------
+// Reach
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id        String   @id @default(cuid()) @map("id")
+  userId    String   @map("user_id")
+  type      String   @map("type")
+  payload   Json     @map("payload")
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+  @@map("notifications")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid()) @map("id")
+  userId    String   @map("user_id")
+  endpoint  String   @unique @map("endpoint")
+  p256dh    String   @map("p256dh")
+  auth      String   @map("auth")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+model PostView {
+  id        String   @id @default(cuid()) @map("id")
+  postId    String   @map("post_id")
+  viewerKey String   @map("viewer_key")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, viewerKey])
+  @@map("post_views")
 }

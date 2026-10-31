@@ -147,6 +147,26 @@ expected_engine_version = "5fe21811a6ba0b952a3bc71400666511fe3b902f"
 - **Fallback plan** if prisma-client-py cannot express something: keep `schema.prisma` as the source of
   truth and swap the Python data layer to SQLAlchemy + Alembic. Record it in `docs/DECISIONS.md`.
 
+### T-010 schema findings (2026-10-31, verified)
+
+- The real 17-model / 7-enum schema generates cleanly on prisma-client-py 0.15.0. Enums become `StrEnum`
+  classes in `prisma.enums`; `Json`/`Json?` become `JSONB`; `@updatedAt` is handled by the client;
+  `onDelete: Cascade` is emitted as real Postgres FKs; nested `include` works.
+- `prisma migrate dev` needs to write `prisma/migrations/`, but the bind-mounted `backend/` is root-owned
+  while the container runs as `appuser` (uid 10001). Run migration creation as root and regenerate as the
+  app user:
+  `docker compose exec -u root -T api python -m prisma migrate dev --name <name> --skip-generate`
+  then `docker compose exec -T api python -m prisma generate`.
+- `prisma-client-js` (frontend types) requires the npm `@prisma/client`, which AD-004 forbids in the
+  project. It is generated in a throwaway `/tmp` project pinned to `prisma`/`@prisma/client` 5.19.0, with
+  `--no-engine`, and only the `.d.ts` files are copied to `apps/web/src/generated/prisma`. Never run
+  the Python wrapper from a directory that has its own `node_modules/prisma` — it can overwrite the
+  Python client with a different engine version. Details in T-010's research notes.
+  **The `.d.ts` output is gitignored and is NOT committed** (manager decision, 2026-10-31): the web app
+  codes against the OpenAPI spec, not the database schema, so these ~1.3 MB of vendored declarations are
+  never a build input and must never be imported. Regenerate them only if a task really needs DB-shaped
+  types in the frontend.
+
 ---
 
 ## 5. Moderation models (HuggingFace)

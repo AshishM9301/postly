@@ -263,6 +263,12 @@ postly/
   server-only `API_INTERNAL_URL`; never from the request's `host` / `x-forwarded-host` headers.
 - The Prisma stack is **verified**: prisma-client-py 0.15.0 + Prisma CLI 5.19.0 works on `python:3.13-slim`
   and on local Python 3.14.7. Details in `docs/research/00-versions.md` §4 and §10.
+- **The real data model exists** (T-010): `backend/prisma/schema.prisma` holds the **17** models and **7** enums
+  from `docs/DATA_MODEL.md` (the doc's "19 tables" header was stale — the body always listed 17), with
+  migration `20261031060611_init` applied on boot and the 9 categories seeded by
+  `backend/scripts/seed_categories.py` (idempotent). The frontend does **not** use the database schema:
+  it codes against the OpenAPI spec. Prisma TS declarations under `apps/web/src/generated/` are
+  **gitignored** — never import them, never commit them.
 - Versions are already pinned and researched in `docs/research/00-versions.md` — do not re-derive them.
 - The repo is a git repository on branch `main`. **The manager may commit**; workers must not.
 

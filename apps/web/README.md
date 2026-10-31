@@ -57,6 +57,15 @@ codegen tool. Do not add it there — a container with the source tree can point
 `src/lib/api/client.ts` is the only file under `src/` that may call `fetch`. Add endpoint methods there, not
 in components. The codegen script in `scripts/` is exempt: it talks to the spec, not to the API.
 
+## Prisma types (do not use)
+
+`src/generated/prisma/` holds Prisma's own TypeScript declarations for the database schema. The directory
+is **gitignored and not committed**, and nothing in this app imports it: the web app's contract is the
+**OpenAPI spec** (`src/lib/api/types.ts`), not the database schema. Treat the schema as a backend
+implementation detail. If a task genuinely needs DB-shaped types, regenerate them with the recipe in
+[`docs/research/00-versions.md`](../../docs/research/00-versions.md) §4 — but do not import
+`PrismaClient`: the browser has no database access and must never have any.
+
 ## Docker
 
 `Dockerfile` is a three-stage build (`deps` → `builder` → `runner`) on `node:24.18.0-alpine`. The runner

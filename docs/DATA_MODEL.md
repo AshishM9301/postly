@@ -1,6 +1,6 @@
 # DATA MODEL
 
-19 tables. `backend/prisma/schema.prisma` is the source of truth — this document explains *why* each table
+17 tables. `backend/prisma/schema.prisma` is the source of truth — this document explains *why* each table
 looks the way it does. T-010 writes the schema; if it and this document disagree, the schema wins and this
 document gets updated in the same task.
 
@@ -175,12 +175,13 @@ This is the "Accept & show" record — it survives reloads and devices.
 ## 7. Enums
 
 ```
-PostStatus      OPEN IN_PROGRESS SOLVED CLOSED
-BlameCategory   MUNICIPALITY CONTRACTOR UTILITY POLICE SCHOOL LANDLORD UNKNOWN
-ModerationState CLEAN FLAGGED HIDDEN
-VoteTarget      POST COMMENT BLAME
-MediaKind       IMAGE VIDEO
-ReportStatus    OPEN REVIEWING ACTIONED DISMISSED
+PostStatus       OPEN IN_PROGRESS SOLVED CLOSED
+BlameCategory    MUNICIPALITY CONTRACTOR UTILITY POLICE SCHOOL LANDLORD UNKNOWN
+ModerationState  CLEAN FLAGGED HIDDEN
+ModerationStatus PENDING FLAGGED CONFIRMED REJECTED APPROVED   (ModerationRecord.status)
+VoteTarget       POST COMMENT BLAME
+MediaKind        IMAGE VIDEO
+ReportStatus     OPEN REVIEWING ACTIONED DISMISSED
 ```
 Enums are Prisma enums → Postgres enums. `prisma-client-py 0.15` maps them to Python `Enum`; if a
 generated enum turns out to be awkward, the fallback is `String` + a check constraint (record the change in
