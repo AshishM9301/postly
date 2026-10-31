@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     pepper: str = ""
     rate_limit_salt: str = ""
 
+    firebase_admin_credentials: str = ""
+    firebase_project_id: str = ""
+    session_ttl_days: int = 30
+    ghost_post_ttl_days: int = 90
+    ghost_expiry_options: str = "7,30,90,365"
+
     openai_api_key: str = ""
     moderation_chain: str = "rules,openai,local-hf"
     hf_model_text: str = "KoalaAI/Text-Moderation"
@@ -42,6 +48,11 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    @property
+    def ghost_expiry_option_list(self) -> list[int]:
+        options = {int(value) for value in self.ghost_expiry_options.split(",") if value.strip()}
+        return sorted(options | {self.ghost_post_ttl_days})
 
     @model_validator(mode="after")
     def _require_secrets_outside_dev(self) -> "Settings":

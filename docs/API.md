@@ -38,7 +38,7 @@ Public endpoints (no auth): `GET /health`, `GET /categories`, `GET /areas/search
 | POST | `/auth/google` | body: `{ id_token }` | exchange a Firebase ID token for a Postly session |
 | POST | `/auth/pseudo` | body: `{ alias?, secret, expiry_days? }` | create/reopen a pseudonymous identity |
 | POST | `/auth/rotate-alias` | yes | new alias, same identity |
-| GET | `/me` | yes | current principal |
+| GET | `/me` | no (ghost) / yes | current principal — see below |
 | PATCH | `/me` | yes | edit profile / alias / ghost expiry preference |
 | DELETE | `/me` | yes (+ `secret` for pseudonymous) | **hard delete** of the account and everything |
 | POST | `/ghost/purge` | body: `{ session_key }` | delete every ghost post/comment/vote made with that key |
@@ -48,6 +48,17 @@ Public endpoints (no auth): `GET /health`, `GET /categories`, `GET /areas/search
 ```json
 { "data": { "alias": "Neighbor_7f3a", "token": "postly_sess_…", "mode": "pseudonymous" } }
 ```
+
+`GET /me` needs no token: a request with **no** `Authorization` header is a **ghost** caller and gets the
+empty ghost principal back (there is no ghost user row to look up):
+
+```json
+{ "data": { "mode": "ghost", "alias": null, "user_id": null, "expiry_days": 90, "is_admin": false } }
+```
+
+With a `Bearer` session token it resolves the session and returns `mode: "google"` or
+`mode: "pseudonymous"` with the alias. A malformed, unknown, revoked or expired token is `401
+unauthorized`.
 
 ## 3. Areas & categories
 
