@@ -4,7 +4,7 @@
 - quest: Q0
 - depends: T-003, T-004
 - owner: s-20261031-1044
-- updated: 2026-10-31T11:20
+- updated: 2026-10-31T13:36
 - files: apps/web/package.json, apps/web/src/lib/api/types.ts, apps/web/src/lib/api/client.ts, apps/web/src/lib/api/index.ts, apps/web/scripts/generate-api-types.ts, apps/web/src/app/page.tsx, apps/web/src/env.js, apps/web/README.md, apps/web/tsconfig.json, backend/app/api/v1/health.py, docs/API.md, docs/research/00-versions.md
 
 ## Goal
@@ -87,6 +87,20 @@ workaround here — later tasks hit the same thing.
   dies with `MODULE_NOT_FOUND`. Codegen is a host-side command; the API is published on host port `8000`.
 - `openapi-typescript` 7.13.0 is not yet written into `docs/research/00-versions.md` §2 (line 45 still says
   "latest stable", line 83 still lists it as "not installed yet").
+
+### Addendum (2026-10-31, manager s-20261031-1336)
+
+- **Next.js App Router treats `_`-prefixed folders as *private* — they are not routable.** A temporary probe
+  route placed in `src/app/__probe/route.ts` answered **404** (`GET /__probe 404`), even though the file was
+  valid. Renaming the folder to `src/app/probeTmp/` made it routable at once. When you need a temporary
+  route for a runtime probe, do **not** prefix the folder with `_` (and do not prefix it with `(`/`@`).
+- **A deleted route leaves stale type references in `.next/types/validator.ts`.** After deleting the probe
+  route, `npm run typecheck` failed with
+  `.next/types/validator.ts(62,39): error TS2307: Cannot find module '../../src/app/probeTmp/route.js'`.
+  `tsconfig.json` includes `.next/types/**/*.ts`, so the stale artifact is type-checked. Fix: delete `.next`
+  (or rebuild) — the source was fine. This bites whenever a route is removed, not only for probes.
+- **`grep`/`rg` are not installed on this Windows host**; the "only fetch call site" check was done with the
+  Grep tool, and the file-hash idempotency check with `Get-FileHash -Algorithm SHA256`.
 
 ## Work log
 
@@ -333,3 +347,79 @@ workaround here — later tasks hit the same thing.
     unusable from a Server Component. T-011 should either give it an absolute base or stop exporting it.
 - next: **T-006 accepted → Q0 is complete.** Release **T-010** (Prisma schema, 19 models, migration, seed
   categories) — it is the next `ready` task with all dependencies done.
+
+## Manager review
+
+### 2026-10-31 · manager s-20261031-1336 (re-verification of an accepted task)
+
+- verdict: **accepted — re-verified independently.** T-006 stays `done`; the board row stays `[x]`.
+- why this review exists: the task was already accepted on 2026-10-31 at 11:20. This session re-ran **every**
+  `## Done when` check from scratch (no result taken from the earlier report) to confirm the acceptance still
+  holds on the current tree.
+- checked (every item re-run by the manager):
+  - **Done-when #1 — codegen.** `npm run api:types` → `[api:types] wrote
+    E:\projects\endev\postly\apps\web\src\lib\api\types.ts`, exit 0. SHA-256 before and after the re-run is
+    identical (`E4867F2E40056E8EF08C8557219057B5E313DB5A2FD218FFF805423068A0FF19` both times) → idempotent. ✓
+    `API_INTERNAL_URL=http://localhost:9999 npm run api:types` → `[api:types] could not reach the API at
+    http://localhost:9999/openapi.json: fetch failed` + the "start the API" hint, exit **1**. Fails loudly. ✓
+  - **Done-when #2 — single fetch call site.** `fetch(` under `apps/web/src/` matches **exactly one** file:
+    `apps/web/src/lib/api/client.ts:204`. Across the whole app there are two: `client.ts:204` and
+    `apps/web/scripts/generate-api-types.ts:31` (the exempt codegen — it talks to the OpenAPI document, not to
+    the API). `apps/web/lib/` is gone. ✓
+  - **Done-when #3 — typecheck + negative proof.** `npm run typecheck` → exit **0**. Deliberate wrong call
+    (temporary `src/__probe.ts`, since deleted):
+    `src/__probe.ts(5,22): error TS2339: Property 'does_not_exist' does not exist on type
+    '{ status: "ok" | "degraded"; db: "ok" | "down"; }'` and `src/__probe.ts(7,16): error TS2339: Property 'posts'
+    does not exist on type 'ApiClient'`, exit **2**. Probe removed → typecheck exit **0** again. ✓
+  - **Done-when #4 — build.** `npm run build` → `✓ Compiled successfully`, `/` is `ƒ (Dynamic)`, exit **0**.
+    `npm run lint` → `✔ No ESLint warnings or errors`, exit **0**. ✓
+  - **Done-when #5 — docs ↔ client.** `docs/API.md` line 3 "Base URL `/api/v1`" ↔ `client.ts:46`
+    `DEFAULT_BASE_URL = "/api/v1"`; line 17 `Authorization: Bearer <token>` ↔ `client.ts:187`
+    `headers.set("Authorization", \`Bearer ${token}\`)`; line 14 error envelope
+    `{ "error": { "code", "message", "details" } }` ↔ `client.ts:17-25` (`ApiErrorPayload` / `ApiErrorEnvelope`)
+    and `client.ts:65-91` (`ApiError.fromResponse` + `isApiErrorEnvelope`); line 10 success envelope
+    `{ "data", "meta" }` ↔ `client.ts:12-15` (`ApiEnvelope<T>`) and `client.ts:162-176` (`request<T>()` unwraps
+    `data`). All three match. ✓
+  - **Done-when #6 — placement + trusted base URL.** The client lives at `apps/web/src/lib/api/{client,index,
+    types}.ts`; `tsconfig.json:30` maps `~/*` → `./src/*`; `src/app/page.tsx:2` imports `~/lib/api` and
+    `page.tsx:11` builds the base from `${env.API_INTERNAL_URL}/api/v1`, where `src/env.js:11,29` declares
+    `API_INTERNAL_URL` in the **server** schema. A search of `src/**` for `x-forwarded-host` / `forwarded` /
+    `headers()` returns **0 matches** — the blind-SSRF vector is still closed. The base URL is read at runtime,
+    not baked: `.next/server/app/page.js` contains **no** `api:8000` literal and carries
+    `runtimeEnv:{…,API_INTERNAL_URL:process.env.API_INTERNAL_URL}`. `docs/research/00-versions.md` line 45 →
+    `openapi-typescript | 7.13.0`, line 86 records the exact pin and it is **no longer** in the "not installed yet"
+    list (lines 82-84). Installed version reads back `7.13.0`; `npm view openapi-typescript dist-tags` →
+    `latest: 7.13.0`, `next: 7.0.0-rc.1` → the pin is the current stable, not a prerelease. ✓
+  - **Runtime proof — the page really goes through the client.** `GET http://localhost:3000` → **200**, exactly
+    **2** × `text-emerald-400">ok</dd>`, no `unreachable`. `GET http://localhost:3000/api/v1/health` → 200
+    `{"status":"ok","db":"ok"}` (the browser-side proxy still works). `docker compose stop api` → `GET
+    http://localhost:3000` still **200** but renders `unreachable` and **no** `ok`; `docker compose start api` →
+    **200** with `ok` / `ok` again. ✓
+  - **Runtime proof — client behaviour** (temporary probe route on host `next dev` :3001, deleted afterwards):
+    `health()` → `{"status":"ok","db":"ok"}`; 404 → `ApiError{status:404}`; unreachable host →
+    `ApiError{status:0, code:"network_error"}`; `Authorization: Bearer probe-token` sent when `getToken` is
+    supplied and **absent** when it is not; `Accept: application/json` always; `request()` unwraps the
+    `{data,meta}` envelope. ✓
+  - Backend: `docker compose exec -T api ruff check .` → `All checks passed!`; `ruff format --check .` →
+    `14 files already formatted` (12 in T-006, +2 from T-010's in-flight files); `python -m pytest -q` →
+    `2 passed, 1 warning` (the extra test is T-010's). ✓
+  - No `any` in `src/lib/api/**` or `scripts/**`. `src/lib/api/types.ts` is **tracked** in git
+    (`git ls-files` lists it) and not gitignored. ✓
+  - **Cleanup verified.** Probe routes and the probe log deleted, the dev server stopped, port 3001 free, the
+    stale `.next/types/validator.ts` (generated for the deleted probe) removed and the build re-run clean.
+    `git status --porcelain` is identical to the state before this session — nothing left behind.
+- notes (no action required, carried forward):
+  - The exported singleton `api = createApiClient()` (`client.ts:241`) still carries the relative default base,
+    so it is unusable from a Server Component. T-011 should give it an absolute base or stop exporting it.
+  - The live API still returns FastAPI's default `{"detail": …}` for 404/422, so the client's `internal_error`
+    fallback fires instead of the documented envelope. The client matches the *documented* contract; the API
+    side needs real exception handlers when business endpoints land (T-015+). Not a T-006 defect.
+  - `health.py` declares `response_model=HealthResponse` but returns a raw `JSONResponse`, so FastAPI skips
+    response validation — the model is documentation + schema only.
+  - `openapi-typescript` adds 17 audit advisories, all in transitive devDependencies of `@redocly/openapi-core`.
+    Not force-fixed (that would change pinned versions).
+- watch item for the **T-010** review (not a T-006 defect): the in-flight T-010 work puts a vendored Prisma
+  client under `apps/web/src/generated/prisma/**`. It contains **no** `fetch(` call today, so done-when #2 still
+  holds, but it places third-party code inside the "only `client.ts` may call `fetch`" zone. T-010's review
+  should decide whether it belongs under `src/` and whether it should be gitignored.
+- next: T-006 remains closed. **T-010** is the open item and is already at `review`.
