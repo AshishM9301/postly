@@ -19,7 +19,7 @@ up work without re-researching anything.
 | T-001 | Version lock + environment proof | done |
 | T-002 | Repo skeleton + Docker Compose | done |
 | T-003 | FastAPI skeleton + Prisma client + health | done |
-| T-004 | Frontend scaffold + API proxy + health page | ready |
+| T-004 | Frontend scaffold + API proxy + health page | done |
 | T-005 | Docs set + AGENTS.md contract | done |
 | T-006 | OpenAPI → TypeScript types + typed fetch client | ready |
 
@@ -30,4 +30,5 @@ up work without re-researching anything.
   `python:3.13-slim` and on local Python 3.14.7.
 - Development happens **inside Docker** so the Python version is identical everywhere. A local venv is
   optional and must match `docs/research/00-versions.md`.
-- The compose stack (`db` + `api`) is already running and healthy; `web` joins in T-004.
+- The compose stack (`db` + `api` + `web`) is running and healthy. `web` joined in T-004 and serves
+  `http://localhost:3000`, proxying `/api/:path*` to the API.

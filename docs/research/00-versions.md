@@ -46,6 +46,47 @@ scaffold choose; do not force newer.
 
 Node on this machine: **v24.18.0** (satisfies Next 15 and Next 16's `>=20.9`).
 
+### Verified installed in `apps/web` (T-004, 2026-10-30)
+
+Scaffold command (non-interactive; `apps/web` did not exist beforehand):
+
+```
+npx create-t3-app@7.40.0 apps/web --CI --noGit \
+  --tailwind true --nextAuth false --betterAuth false --prisma false \
+  --drizzle false --trpc false --appRouter true --eslint true --biome false \
+  --import-alias "@/*"
+```
+
+The CLI scaffolded the files but aborted during install with `TypeError: i.replace is not a function`;
+`npm install` in `apps/web` completed the setup. Versions are pinned exactly in `package.json`
+(`package-lock.json` is committed):
+
+| Package | Version | Note |
+|---|---|---|
+| `next` | 15.5.28 | resolved from the scaffold's `^15.2.3` |
+| `react` / `react-dom` | 19.3.1 | |
+| `typescript` | 5.9.3 | scaffold resolved `^5.8.2` to 5.9.3; lint/typecheck/build pass |
+| `tailwindcss` / `@tailwindcss/postcss` | 4.3.3 | v4, CSS-first config |
+| `eslint` | 9.39.5 | npm deprecation warning, still what the scaffold ships |
+| `eslint-config-next` | 15.5.28 | |
+| `prettier` | 3.9.10 | |
+| `prettier-plugin-tailwindcss` | 0.6.14 | |
+| `zod` | 3.25.76 | **scaffold ships zod 3.x**, not the plan's 4.x; `@t3-oss/env-nextjs` 0.12.0 expects it |
+| `@t3-oss/env-nextjs` | 0.12.0 | env validation |
+| `postcss` | 8.5.32 | |
+| `typescript-eslint` | 8.72.1 | |
+| `@eslint/eslintrc` | 3.3.7 | |
+| `@types/node` | 20.19.43 | |
+| `@types/react` / `@types/react-dom` | 19.3.0 | |
+
+Not installed yet (later tasks): `@tanstack/react-query` (T-020), `firebase` (T-011), `blurhash` (T-016),
+`shadcn` (T-020), `openapi-typescript` (T-006). `npm install` reports 5 advisories in the scaffold's
+transitive tree; they were not force-fixed because that changes pinned versions.
+
+The web image uses `node:24.18.0-alpine` (multi-stage: deps → builder → non-root `nextjs` runner).
+The `/api/:path*` rewrite target comes from `API_INTERNAL_URL` (`http://api:8000` in compose,
+`http://localhost:8000` fallback for host `next dev`).
+
 ---
 
 ## 3. Backend (backend/)
@@ -188,10 +229,11 @@ docker compose exec api python -m prisma migrate status
 |---|---|
 | Postgres image | `postgres:16.15-alpine` (tag confirmed to exist; `postgres:16-alpine` resolves to 16.15) |
 | API image | `python:3.13-slim` + `apt-get install -y libatomic1` |
-| Services | `db` (5432), `api` (8000); `web` joins in T-004 |
+| Services | `db` (5432), `api` (8000), `web` (3000) |
 | Volumes | `postly_pgdata` (database), `postly_postly_media` (uploads) |
 | Startup | the api container runs `python -m prisma migrate deploy` before uvicorn, so migrations apply on boot |
-| Health | `GET /api/v1/health` → `{"status":"ok","db":"ok","version":"0.1.0"}` |
+| Health | `GET /api/v1/health` → `{"status":"ok","db":"ok"}` (no `version` field — see `backend/app/api/v1/health.py`) |
+| Web image | `node:24.18.0-alpine`, 3 stages, runs as `nextjs` (uid 1001); proxy target `API_INTERNAL_URL` |
 
 ### Prisma CLI behaviours worth remembering
 - `prisma migrate status` **exits 1 when migrations are pending** — never chain `&&` after it in a script.
@@ -215,6 +257,12 @@ instruction — **its data is intact**, restore it with `docker start coursehub-
 docker compose up -d
 → postly-postgres  Up (healthy)  0.0.0.0:5432->5432/tcp
 → postly-api       Up (healthy)  0.0.0.0:8000->8000/tcp
+→ postly-web       Up (healthy)  0.0.0.0:3000->3000/tcp
 api logs: "All migrations have been successfully applied." → "Uvicorn running on http://0.0.0.0:8000"
-GET http://localhost:8000/api/v1/health → {"status":"ok","db":"ok","version":"0.1.0"}
+GET http://localhost:8000/api/v1/health → {"status":"ok","db":"ok"}
+GET http://localhost:3000/api/v1/health → {"status":"ok","db":"ok"}   (via the Next rewrite)
+GET http://localhost:3000              → 200, home page renders API=ok / Database=ok
 ```
+
+Verified again on 2026-10-31 by the manager during the T-004 review, from a cold
+`docker compose down` → `docker compose up -d`, including `docker compose build --no-cache web`.

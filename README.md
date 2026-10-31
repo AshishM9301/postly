@@ -4,7 +4,7 @@ Local community problems app. Post a pothole or a broken water line with a photo
 decides who sees it, the community votes decide what trends, and anything abusive or NSFW is blurred until
 you choose to look.
 
-**Status:** pre-implementation. The plan, the task board and the design docs live in `docs/`.
+**Status:** in implementation. The plan, the task board and the design docs live in `docs/`.
 
 ## Stack
 
@@ -18,7 +18,7 @@ you choose to look.
 
 The API is the contract. A future Kotlin / Swift client must work against it without changes.
 
-## Run it (once T-002 lands)
+## Run it
 
 ```bash
 cp .env.example .env

@@ -250,10 +250,13 @@ postly/
 
 - **Q0 Foundation is in progress.** See `docs/tasks/README.md`.
 - The **compose stack exists and runs**: `db` (`postgres:16.15-alpine`) + `api` (`python:3.13-slim` with
-  `libatomic1`), both healthy, migrations applied on boot, `GET /api/v1/health` → `{"status":"ok","db":"ok"}`.
+  `libatomic1`) + `web` (`node:24.18.0-alpine`), all healthy, migrations applied on boot,
+  `GET /api/v1/health` → `{"status":"ok","db":"ok"}`, `http://localhost:3000` serves the web app.
 - `backend/app/main.py` is a **minimal skeleton** (health endpoint only). T-002 hardens the image and T-003
   turns it into the real structure.
-- `apps/web` does not exist yet — T-004 scaffolds it.
+- `apps/web` **exists** (T-004): Next.js 15.5.28 App Router, Tailwind 4, TypeScript 5.9.3, pure REST client
+  — no tRPC, no NextAuth, no Prisma. It proxies `/api/:path*` → `API_INTERNAL_URL` (compose: `http://api:8000`,
+  host dev: `http://localhost:8000`). Details in `docs/research/00-versions.md` §2.
 - The Prisma stack is **verified**: prisma-client-py 0.15.0 + Prisma CLI 5.19.0 works on `python:3.13-slim`
   and on local Python 3.14.7. Details in `docs/research/00-versions.md` §4 and §10.
 - Versions are already pinned and researched in `docs/research/00-versions.md` — do not re-derive them.
