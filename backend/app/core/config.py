@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     ghost_post_ttl_days: int = 90
     ghost_expiry_options: str = "7,30,90,365"
 
+    for_you_half_life_hours: float = 12.0
+    trending_half_life_hours: float = 18.0
+
     openai_api_key: str = ""
     moderation_chain: str = "rules,openai,local-hf"
     hf_model_text: str = "KoalaAI/Text-Moderation"

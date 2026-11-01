@@ -245,12 +245,43 @@ Unknown post/comment → `404 post_not_found` / `404 comment_not_found`.
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| GET | `/feed/for-you` | no | personalised by area + follows + recency |
-| GET | `/feed/trending` | no | time-decayed engagement, all areas |
+| GET | `/feed/for-you` | no | personalised by selected/followed areas + followed authors |
+| GET | `/feed/trending` | no | time-decayed engagement, all areas (18 h half-life) |
 | GET | `/feed/new` | no | chronological |
 | GET | `/feed/nearby?lat=&lng=&radius_m=` | no | distance sorted |
 
-Shared query params: `area_id`, `category_id`, `limit`, `cursor`, `sort`.
+Shared query params: `area_id`, `category_id`, `limit` (1–50, default 20), `cursor`. `area_id` and
+`category_id` are **filters** on every tab. Posts with `moderation_state = HIDDEN` never appear.
+
+Every tab returns the same shape (`FeedPost` = the post shape from §4 plus optional `score` /
+`distance_meters`):
+
+```json
+{ "data": [ { "id": "…", "title": "…", "score": 2.41, "distance_meters": null, "area": {}, "…": "…" } ],
+  "meta": { "cursor": "opaque", "has_more": true } }
+```
+
+Ranking (Trending / For You):
+```
+engagement = log10(max(1, upvote_count - downvote_count) + 2) + 0.6*comment_count + 0.05*view_count
+score      = engagement * exp(-age_hours / half_life) * area_boost * affinity_boost
+```
+- half-life: **12 h** for For You, **18 h** for Trending (env-configurable).
+- For You boosts, signed-in only: the selected `area_id` **2×**, followed areas (`AreaFollow`) **1.5×**,
+  followed authors (`Follow`) **1.5×**. Anonymous For You applies no boosts — but it still uses the 12 h
+  half-life, so its order can differ from Trending's 18 h.
+- `score` is computed at request time; no stored score column. A diversity penalty is **not** implemented
+  yet (backlog).
+- Trending/For You fetch the newest 1000 candidates and rank in Python; `now` is pinned inside the cursor
+  so page 2 sees the same scores as page 1.
+
+Cursor rules:
+- `/feed/new` — `(created_at, id)` descending; a late post cannot make an existing post repeat.
+- `/feed/trending`, `/feed/for-you` — `(pinned now, score, id)`; new posts do not change existing scores.
+- `/feed/nearby` — `(distance_m, id)`; posts without `lat`/`lng` are excluded. `radius_m` defaults to 5000
+  and is capped at 25000. Distances use Haversine (6,371 km).
+
+An invalid/forged cursor is `422 validation_error`.
 
 ## 8. Users & follows
 
