@@ -261,6 +261,15 @@ postly/
   live OpenAPI spec, regenerate with `npm run api:types` **on the host**) and `client.ts` — the **only** file
   under `src/` allowed to call `fetch`. Server code must pass an absolute base URL built from the trusted
   server-only `API_INTERNAL_URL`; never from the request's `host` / `x-forwarded-host` headers.
+  **This is machine-enforced since T-012**: `apps/web/eslint.config.js` bans `fetch(` in `src/**` outside
+  `client.ts`, so `npm run lint` fails on a second call site. Use `ApiClient` (or an injected
+  `fetchImpl` seam) instead.
+- **The ghost vault exists** (T-012): `apps/web/src/lib/ghost/` holds the framework-agnostic crypto
+  (`deriveOwnerKey = HMAC-SHA256(secret, targetId)`, base64url, WebCrypto), the alias generator and the
+  IndexedDB key vault (post keys + session key, export/import, `deleteOwnPost` through the typed client).
+  Tests: `npm run test:ghost` (node:test, 17 cases). The secret never leaves the browser — the server only
+  ever sees `owner_key`. The **encoding and the DELETE transport are still unpinned in `docs/API.md`**; T-015
+  and T-021 must settle them before a mobile client can interoperate.
 - The Prisma stack is **verified**: prisma-client-py 0.15.0 + Prisma CLI 5.19.0 works on `python:3.13-slim`
   and on local Python 3.14.7. Details in `docs/research/00-versions.md` §4 and §10.
 - **The real data model exists** (T-010): `backend/prisma/schema.prisma` holds the **17** models and **7** enums
