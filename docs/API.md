@@ -183,11 +183,33 @@ The create/read/edit response is the same explicit allow-list for all three mode
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| GET | `/posts/{id}/comments` | no | threaded comments (flat list + `parent_id`) |
-| POST | `/posts/{id}/comments` | yes | reply (ghost: `owner_key`) |
+| GET | `/posts/{id}/comments` | no | flat thread (rebuild the tree from `parent_id`) |
+| POST | `/posts/{id}/comments` | yes (+ ghost `owner_key`) | top-level comment or reply |
 | PATCH | `/comments/{id}` | owner | edit body |
-| DELETE | `/comments/{id}` | owner | delete |
-| GET | `/comments/{id}/replies` | no | one level of replies |
+| DELETE | `/comments/{id}` | owner | delete (replies are kept) |
+| GET | `/comments/{id}/replies` | no | not implemented; use the flat thread |
+
+Create body:
+```json
+{
+  "id": "uuid (optional; ghosts generate it)",
+  "body": "The contractor left the rubble here.",
+  "parent_id": "…",                    // omit for a top-level comment
+  "alias": "Neighbor_7f3a",            // ghost only, required
+  "owner_key": "HMAC(commentKey, id)"  // ghost only, required
+}
+```
+
+- `depth` is computed on create (`parent.depth + 1`, top level `0`) and **capped at 3**; a deeper reply
+  returns `422 max_depth_exceeded`.
+- `GET /posts/{id}/comments` is oldest-first (`created_at`, then `id`), cursor-paginated:
+  `?limit=20&cursor=<last id>`. The response is `{ "data": [CommentOut…], "meta": { "cursor": …, "has_more": … } }`.
+  Each `CommentOut` carries `id`, `post_id`, `parent_id`, `alias`, `body`, `depth`, counters, timestamps and
+  `author` (`null` for ghosts). Ghost keys never appear.
+- **DELETE keeps replies**: the direct children are promoted to top level (`parent_id = null`) and their
+  subtree's depth is shifted up so promoted roots are `depth = 0`. Only the deleted comment decrements the
+  post's `comment_count`; replies remain counted.
+- Comment votes use `PUT /votes/COMMENT/{id}` from §6; the comment's own counters are updated.
 
 ## 6. Votes
 
