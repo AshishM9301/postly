@@ -41,5 +41,28 @@ export default tseslint.config(
 				projectService: true
 			}
 		}
-	}
+	},
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/lib/api/client.ts'],
+    rules: {
+      // `client.ts` is the single fetch door (AGENTS.md §11). Everything else
+      // must go through it so auth, base URL and error handling stay in one place.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'CallExpression[callee.name="fetch"]',
+          message:
+            'Call fetch only from src/lib/api/client.ts — use the typed API client instead.',
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/__tests__/**/*.ts'],
+    rules: {
+      // node:test registers describe/it; it is not awaited by design.
+      '@typescript-eslint/no-floating-promises': 'off',
+    },
+  },
 )

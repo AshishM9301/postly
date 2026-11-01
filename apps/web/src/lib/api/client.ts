@@ -38,9 +38,19 @@ export type ApiRequestOptions = {
 
 export type TokenGetter = () => string | null | Promise<string | null>;
 
+/**
+ * The transport seam. Keeping it injectable makes the client testable and keeps
+ * `fetch` callable from exactly one place in the app.
+ */
+export type FetchLike = (
+  input: string,
+  init: RequestInit,
+) => Promise<Response>;
+
 export type ApiClientOptions = {
   baseUrl?: string;
   getToken?: TokenGetter;
+  fetchImpl?: FetchLike;
 };
 
 export const DEFAULT_BASE_URL = "/api/v1";
@@ -140,10 +150,12 @@ function withQuery(
 export class ApiClient {
   private readonly baseUrl: string;
   private readonly getToken?: TokenGetter;
+  private readonly fetchImpl: FetchLike;
 
   constructor(options: ApiClientOptions = {}) {
     this.baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
     this.getToken = options.getToken;
+    this.fetchImpl = options.fetchImpl ?? ((input, init) => fetch(input, init));
   }
 
   async health(): Promise<HealthData> {
@@ -175,6 +187,17 @@ export class ApiClient {
     return payload.data as T;
   }
 
+  /**
+   * Send a request whose success carries no body (e.g. a 204 DELETE). Unlike
+   * {@link request} this does not insist on a `{ data, meta }` envelope.
+   */
+  async requestVoid(
+    path: string,
+    options: ApiRequestOptions = {},
+  ): Promise<void> {
+    await this.send(path, options);
+  }
+
   private async send(
     path: string,
     options: ApiRequestOptions = {},
@@ -201,7 +224,7 @@ export class ApiClient {
 
     let response: Response;
     try {
-      response = await fetch(url, {
+      response = await this.fetchImpl(url, {
         method: options.method ?? "GET",
         headers,
         body,
