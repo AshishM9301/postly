@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api.v1 import areas, auth, categories, health, me, media, posts
+from app.api.v1 import areas, auth, categories, health, me, media, posts, votes
 
 router = APIRouter()
 router.include_router(health.router)
@@ -12,3 +12,4 @@ router.include_router(areas.router)
 router.include_router(categories.router)
 router.include_router(posts.router)
 router.include_router(media.router)
+router.include_router(votes.router)

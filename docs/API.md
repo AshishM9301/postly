@@ -193,9 +193,31 @@ The create/read/edit response is the same explicit allow-list for all three mode
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| PUT | `/votes/{target_type}/{target_id}` | yes | cast or change a vote (body: `{ value: 1 \| -1 }`) |
-| DELETE | `/votes/{target_type}/{target_id}` | yes | remove your vote |
-| GET | `/me/votes` | yes | your votes |
+| PUT | `/votes/{target_type}/{target_id}` | yes (+ ghost `voter_key`) | cast or change a vote |
+| DELETE | `/votes/{target_type}/{target_id}` | yes (+ ghost `voter_key`) | remove your vote |
+| GET | `/me/votes` | yes | your votes — **not implemented yet** (planned) |
+
+`target_type` is `POST` or `COMMENT` (case-insensitive). `BLAME` is rejected here — blame votes use
+`POST /posts/{id}/blame` (T-050).
+
+PUT body:
+```json
+{ "value": 1, "voter_key": "a:HMAC-sessionKey-targetId" }
+```
+`voter_key` is **required for ghosts only** and must be `a:` + the base64url HMAC-SHA256 of the target id
+under the client-held session key (the server never sees the session key). Registered/pseudonymous voters
+are keyed server-side as `u:<userId>`; any `voter_key` they send is ignored.
+
+Both PUT and DELETE return the fresh counters, so the client does not refetch:
+```json
+{ "data": {
+  "target_type": "POST", "target_id": "…", "value": 1,
+  "upvote_count": 3, "downvote_count": 0
+} }
+```
+`value` is `null` after DELETE. DELETE is idempotent (removing a vote that is not there returns the current
+counters). One vote per target per voter key; repeating PUT with a different value flips the same row.
+Unknown post/comment → `404 post_not_found` / `404 comment_not_found`.
 
 ## 7. Feed
 
