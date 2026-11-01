@@ -40,6 +40,9 @@ apps/web/src/generated/
 backend/media/
 backend/media-local/
 
+# cached datasets (e.g. the 21 MB pincode.csv); the seed re-downloads them
+backend/.cache/
+
 # os / editor
 .DS_Store
 Thumbs.db

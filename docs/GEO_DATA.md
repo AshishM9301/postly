@@ -13,19 +13,28 @@ For You) and how they are grouped.
 | Structure | India Post: `circlename, regionname, divisionname, officename, pincode, officetype, delivery, district, statename, latitude, longitude` |
 | Size | 165,627 rows (all India) |
 
-**Delhi coverage (verified by streaming the file):** 550 rows → **103 distinct PIN codes, all 103 with
-valid latitude/longitude.** Districts present: `CENTRAL`, `EAST`, `NEW DELHI`, `NORTH`, `NORTH EAST`,
-`NORTH WEST`, `SHAHDARA`, `SOUTH`, `SOUTH WEST`, `South East`, `WEST`.
+**Delhi coverage (verified by streaming the file):** 550 rows → **103 distinct PIN codes**. Districts present:
+`CENTRAL`, `EAST`, `NEW DELHI`, `NORTH`, `NORTH EAST`, `NORTH WEST`, `SHAHDARA`, `SOUTH`, `SOUTH WEST`,
+`South East`, `WEST`.
 
 ### Known data quirks
 1. **Mixed casing in `district`** — the raw file contains both `SOUTH WEST` and `South East`. Normalise with
    `district.strip().upper()`.
-2. **`officetype`** is `SO` (sub office = main office), `BO` (branch office), and the `delivery` column
-   says `Delivery` / `Non-Delivery`. A PIN can have several offices.
-3. **`officename` includes the office type suffix** — `Baroda House SO`, `Chawri Bazar SO`. Strip
-   ` SO` / ` BO` / ` PO` / ` S.O.` / ` B.O.` to get a locality name.
-4. **Some rows have `NA` for coordinates** in other states; treat `NA` as missing everywhere.
-5. `officename` is a *post office* name, which is a good locality proxy for Delhi (`Delhi GPO`,
+2. **`officetype` is `PO` / `BO` / `HO` in this file** — measured: 403 `PO`, 135 `BO`, 12 `HO`; there are
+   **no `SO` rows**. The `PO` rows are the sub offices (their names still end in `SO`), so the seed prefers
+   `SO` if one ever appears, then `PO`, then `HO`. The `delivery` column adds `Delivery` / `Non Delivery`.
+3. **`officename` includes the office type suffix** — `Baroda House SO`, `Chaukhandi B.O`,
+   `L. M. Nagar S.O`, `Panchsheel Enclave Post Office`. Some also carry a trailing district qualifier
+   (`Saket SO South Delhi`, `Tilak Nagar S.O (West Delhi)`). Strip the type **and** the qualifier; the seed
+   strips both.
+4. **Coordinates are dirty.** 5 rows have `NA`; **18 more have coordinates outside Delhi** (e.g.
+   `24.8715/86.2071`, `22.0/77.0`, `32.6439/74.0469`) and one is inside the bounding box but ~37 km from the
+   rest of its PIN (`Garhi Mandu BO` at `28.38/77.12`). The seed treats out-of-bbox values as missing and
+   ignores an office more than 20 km from the PIN's main office. Without this, the worst PIN radius would be
+   **4,406 km**; with it, the maximum is **11,869 m**.
+5. **A PIN's rows can disagree on `district`** — 23 of the 103 PINs mix districts (e.g. 110003 has `SOUTH`,
+   `SOUTH EAST` and `NEW DELHI` rows). The seed takes the main office's district.
+6. `officename` is a *post office* name, which is a good locality proxy for Delhi (`Delhi GPO`,
    `Panchsheel Enclave Post Office`, `Karol Bagh SO`) but is not always the neighbourhood people call it.
    Fine for PIN-level areas.
 
@@ -44,19 +53,24 @@ valid latitude/longitude.** Districts present: `CENTRAL`, `EAST`, `NEW DELHI`, `
 ```
 for each row where statename.strip().upper() == 'DELHI':
     pincode, office name, officetype, district, lat, lng
+    drop coordinates that are NA or outside DELHI_BBOX (28.30-29.00 N, 76.80-77.60 E)
 group by pincode:
-    main office  = the row with officetype == 'SO', else the most common name
-    name         = strip_office_suffix(main office name)
+    main office  = first SO, else first PO, else first HO, else the most common name
+    name         = strip_office_suffix(main office name)  # type + district qualifier
     district     = district.strip().upper()
     lat, lng     = main office coordinates
-    radiusMeters = max(haversine(center, other offices of this pin)), floor 1500
-    officeCount  = number of offices for this pin
+    radiusMeters = max(haversine(center, other offices), floor 1500)
+                   ignoring offices > 20 km from the centre (bad coordinates)
+    officeCount  = number of distinct office names for this pin
 ```
 
-Idempotent: re-running updates rows instead of duplicating them (upsert on `pincode`).
+Idempotent: re-running updates rows instead of duplicating them (upsert on `pincode`). The CSV is cached in
+`backend/.cache/pincode.csv` (gitignored); the script downloads it if missing and `--offline` refuses to.
 
-**Done when:** 103 Delhi PINs inserted, 0 without coordinates, districts upper-cased, re-running the seed
-does not change the row count.
+**Verified result (2026-11-01):** 103 PINs inserted, **0** without coordinates, 0 skipped. District casing and
+suffix stripping checked with SQL (`0` rows with a non-upper district, `0` names ending in an office suffix).
+Radius range **1500–11,869 m**; officeCount **1–23**. Re-running the seed leaves the row count at 103 and the
+`md5(string_agg(...))` snapshot unchanged (`899a7e7e37aaaea8cb3c527f4e716e01`).
 
 ## 3. Runtime resolution — zero external calls on the hot path
 
