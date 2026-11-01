@@ -19,6 +19,7 @@ dependencies = [
     "firebase-admin==7.7.0",
     "argon2-cffi==25.1.0",
     "pillow==13.0.0",
+    "blurhash==1.1.5",
     "pywebpush==2.5.0",
     "pytest==9.2.0",
     "ruff==0.17.3",

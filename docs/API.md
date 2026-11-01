@@ -222,9 +222,33 @@ Shared query params: `area_id`, `category_id`, `limit`, `cursor`, `sort`.
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| POST | `/media` | yes | multipart upload → returns `media_id` + `blur_hash` |
-| GET | `/media/{id}/signed` | yes | short-lived signed URL; honours the reveal state |
-| DELETE | `/media/{id}` | owner | delete file + row |
+| POST | `/media` | yes (+ ghost `owner_key` form field) | multipart upload → `media_id` + `blur_hash` |
+| GET | `/media/{id}/signed` | no (signature is the auth) | short-lived signed URL; hidden media is 404 |
+| GET | `/media/{id}/file?expires=&sig=` | signed URL | the file itself; only via a valid signature |
+| DELETE | `/media/{id}` | owner | delete file + row (T-021) |
+
+Upload is **after** the post exists: `POST /media` takes multipart `file`, `post_id` and (ghost only)
+`owner_key`. Only the post's owner may attach media. Accepted types: `image/jpeg`, `image/png`, `image/webp`,
+`video/mp4`, `video/quicktime`; `image/heic`/`heif` is rejected for now. Images are sniffed with Pillow (the
+extension and declared mime are not trusted) and get a 4×3 blurHash. Size cap: 20 MB.
+
+```json
+{ "data": {
+  "media_id": "…", "post_id": "…", "kind": "IMAGE", "mime_type": "image/png",
+  "bytes": 1234, "width": 1024, "height": 768, "blur_hash": "LEHV6nWB2yk8pyo0adR*.7kCMdnj"
+} }
+```
+
+`GET /media/{id}/signed` returns a relative URL that expires within 300 seconds:
+
+```json
+{ "data": { "url": "/api/v1/media/…/file?expires=…&sig=…",
+             "expires_at": "2026-11-01T09:10:00Z" } }
+```
+
+There is **no static mount** of the media directory. The signed URL is the only reader, and it stops working
+when the signature expires or the `Media` row is deleted. Per-user reveal gating (blurred/flagged content) is
+T-035.
 
 ## 10. Moderation & reveals
 
@@ -265,4 +289,6 @@ Shared query params: `area_id`, `category_id`, `limit`, `cursor`, `sort`.
 ## 14. Error codes
 
 `unauthorized` · `forbidden` · `not_found` · `validation_error` · `rate_limited` · `content_flagged` ·
-`not_owner` · `area_required` · `turnstile_failed` (reserved for launch) · `internal_error`.
+`not_owner` · `area_required` · `turnstile_failed` (reserved for launch) · `internal_error` ·
+`post_not_found` · `media_not_found` · `unsupported_media_type` · `invalid_image` · `file_too_large` ·
+`invalid_signature` · `conflict` (a client-supplied id already exists).
