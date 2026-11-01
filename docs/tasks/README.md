@@ -33,7 +33,7 @@ Legend: `[ ]` ready · `[~]` in-progress · `[>]` review · `[x]` done · `[!]` 
 | T-016 | Media upload + blurHash + signed-URL serving | [x] | s-20261101-0810 | T-015 |
 | T-017 | Votes (up/down) + salted voter keys + counters | [x] | s-20261101-0810 | T-015 |
 | T-018 | Comments + nested threads + comment votes | [x] | s-20261101-0810 | T-015, T-017 |
-| T-019 | Feed tabs (for-you / trending / new / nearby) + ranking | [ ] | - | T-016, T-017, T-018 |
+| T-019 | Feed tabs (for-you / trending / new / nearby) + ranking | [x] | s-20261101-0810 | T-016, T-017, T-018 |
 | T-020 | Frontend: feed UI, post card, composer, vote buttons | [ ] | - | T-015, T-019 |
 | T-021 | Delete flows: post, account, ghost purge, removal request | [ ] | - | T-011, T-012, T-015 |
 

@@ -314,6 +314,11 @@ postly/
   listing is flat + cursor-paginated (`parent_id`/`depth` rebuild the tree), and **deleting a comment keeps
   its replies** — the children are promoted to top level and the subtree shifts up. `Post.comment_count` is
   maintained in the same transaction.
+- **The feed tabs are live** (T-019): `GET /api/v1/feed/{new,trending,for-you,nearby}` with
+  `area_id`/`category_id`/`limit`/`cursor`. The ranking is computed in Python from the post counters —
+  `engagement * exp(-age_hours / half_life) * area_boost * affinity_boost` (half-lives 12 h / 18 h, env
+  configurable). The cursor pins `now` so page 2 reproduces page 1's scores; HIDDEN posts never appear.
+  The formula and the boost rules are in `docs/API.md` §7.
 - Versions are already pinned and researched in `docs/research/00-versions.md` — do not re-derive them.
 - The repo is a git repository on branch `main`. **The manager may commit**; workers must not.
 

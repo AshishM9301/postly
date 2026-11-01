@@ -3,7 +3,7 @@
 **Goal:** a signed-in, pseudonymous or ghost user can post text + photo in a Delhi area, see it in the feed,
 and the community can vote and argue in comments.
 
-**Status:** in progress (T-010 … T-018 done)
+**Status:** in progress (T-010 … T-019 done)
 
 **Done when**
 - A post created with a photo appears in `/feed/new` and `/feed/for-you` within 5 seconds.
@@ -27,7 +27,7 @@ and the community can vote and argue in comments.
 | T-016 | Media upload + blurHash + signed-URL serving | done |
 | T-017 | Votes (up/down) + salted voter keys + counters | done |
 | T-018 | Comments + nested threads + comment votes | done |
-| T-019 | Feed tabs (for-you / trending / new / nearby) + ranking | ready |
+| T-019 | Feed tabs (for-you / trending / new / nearby) + ranking | done |
 | T-020 | Frontend: feed UI, post card, composer, vote buttons | ready |
 | T-021 | Delete flows: post, account, ghost purge, removal request | ready |
 
