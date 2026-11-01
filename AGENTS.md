@@ -303,6 +303,12 @@ postly/
   `HMAC-SHA256(SECRET_KEY, "{media_id}:{expires}")`, separate from the ownership `PEPPER`; deleting the row
   revokes a live URL. `blurhash==1.1.5` is pinned — **rebuild the `api` image** (`docker compose build api`)
   so the image has it, not just the running container.
+- **Votes are live** (T-017): `PUT|DELETE /api/v1/votes/{target_type}/{target_id}` for `POST` and `COMMENT`
+  targets, counters updated in the same transaction as the vote row. Session voters are keyed server-side
+  as `u:<userId>`; ghosts send `a:<base64url HMAC-SHA256(sessionKey, targetId)>` (per target, so one ghost's
+  votes cannot be joined across posts). The response carries the fresh counters. `BLAME` is T-050.
+  The `Vote` table has **no timestamp** and **no FK to its target** — deleting a post orphans its votes
+  (T-021 must sweep them).
 - Versions are already pinned and researched in `docs/research/00-versions.md` — do not re-derive them.
 - The repo is a git repository on branch `main`. **The manager may commit**; workers must not.
 

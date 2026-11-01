@@ -118,6 +118,34 @@ The media model: `docs/DATA_MODEL.md` §3. The serving rules: `docs/SECURITY.md`
 
 ## Manager review
 
+### 2026-11-01 · manager s-20261101-0813 (re-verification on the rebuilt image)
+
+- why: the first review left one operational item open — `blurhash` was only a manual user-site install in the
+  running container, not part of the image. I rebuilt the image and re-verified from a clean one.
+- `docker compose build api` → the image installs `blurhash==1.1.5` from `pyproject.toml`;
+  `docker compose exec api python -c "import blurhash"` now resolves to
+  `/usr/local/lib/python3.13/site-packages/blurhash/__init__.py` (version `1.1.5`) — **not** the old
+  `~/.local/lib/...` user-site copy. The open note is closed.
+- `docker compose up -d api` → the container is recreated and healthy; `GET /api/v1/health` →
+  `{"status":"ok","db":"ok"}`; `python -m prisma migrate status` → `2 migrations found … Database schema is
+  up to date!`.
+- **Live media round trip on the new image:** post → 201, PNG upload → 201 with
+  `blur_hash: L90036fZfQfZfZfSfQfSfQfQfQfQ`, `GET /media/{id}/signed` → a 300 s URL, fetching it → **200**
+  `image/png` `cache-control: private, no-store` with **byte-identical** content, deleting the post → 204,
+  `GET /posts/{id}` → 404.
+- **The blurHash is canonical 4×3.** The API value and the stored value are identical and **28 characters**
+  long = 1 size flag + 1 max-AC + 4 DC + 2 × 11 AC components — and it decodes back as **3 rows × 4 cols**
+  with the expected first pixel. (The worker's report quoted a 26-character hash; that was a transcription
+  slip in the report — the stored value is correct.)
+- **Suite:** `python -m pytest -q` → `73 passed`. The first run in this slot showed **1 failure**
+  (`tests/test_areas.py::test_search_by_name_is_case_insensitive_and_bounded`) — that was **cross-talk**:
+  the T-017 (votes) worker was writing and running their own suite against the same database at the same
+  moment (their files landed 10:10–10:14, my run was 10:08–10:12). The test passes in isolation and in the
+  re-run, and the suite is now `73 passed`. **Lesson for the board: two workers must not run pytest against
+  the same database at the same time** — the fixture areas are shared rows.
+- `ruff check .` → `All checks passed!`; `ruff format --check .` → `45 files already formatted`.
+- Environment left clean: 0 posts, 0 media rows, 0 files in the media volume, 1 pre-existing user.
+
 ### 2026-11-01 · manager s-20261101-0813
 
 - verdict: **accepted**. I exercised the whole media surface myself — upload, sniffing, the size cap, the
