@@ -23,12 +23,13 @@ Legend: `[ ]` ready · `[~]` in-progress · `[>]` review · `[x]` done · `[!]` 
 
 | ID | Task | Status | Owner | Depends |
 |---|---|---|---|---|
-| T-010 | Prisma schema (17 models) + migration + seed categories | [x] | s-20261031-1134 | T-003 |
+| T-010 | Prisma schema (18 models) + migration + seed categories | [x] | s-20261031-1134 | T-003 |
 | T-011 | Auth: Google + pseudonymous + ghost + session middleware | [x] | s-20261031-1542 | T-010, T-004 |
 | T-012 | Ghost crypto helpers + local key vault + export/import | [x] | s-20261101-0810 | T-004 |
 | T-013 | Delhi area seed script (pincode.csv, CC0) | [x] | s-20261101-0810 | T-010 |
-| T-014 | Areas API: PIN lookup, GPS nearest, name search | [ ] | - | T-013 |
-| T-015 | Post CRUD + client-generated ids + alias snapshot | [ ] | - | T-011, T-014 |
+| T-014 | Areas API: PIN lookup, GPS nearest, name search | [x] | s-20261101-0810 | T-013 |
+| T-014b | Area name aliases: search every locality name of a PIN | [x] | s-20261101-0810 | T-013, T-014 |
+| T-015 | Post CRUD + client-generated ids + alias snapshot | [x] | s-20261101-0810 | T-011, T-014 |
 | T-016 | Media upload + blurHash + signed-URL serving | [ ] | - | T-015 |
 | T-017 | Votes (up/down) + salted voter keys + counters | [ ] | - | T-015 |
 | T-018 | Comments + nested threads + comment votes | [ ] | - | T-015, T-017 |

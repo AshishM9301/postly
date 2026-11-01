@@ -272,8 +272,9 @@ postly/
   and T-021 must settle them before a mobile client can interoperate.
 - The Prisma stack is **verified**: prisma-client-py 0.15.0 + Prisma CLI 5.19.0 works on `python:3.13-slim`
   and on local Python 3.14.7. Details in `docs/research/00-versions.md` §4 and §10.
-- **The real data model exists** (T-010): `backend/prisma/schema.prisma` holds the **17** models and **7** enums
-  from `docs/DATA_MODEL.md` (the doc's "19 tables" header was stale — the body always listed 17), with
+- **The real data model exists** (T-010): `backend/prisma/schema.prisma` holds the **18** models and **7** enums
+  from `docs/DATA_MODEL.md` (the doc's "19 tables" header was stale — the body always listed 17, plus the
+  `AreaName` alias table added in T-014b), with
   migration `20261031060611_init` applied on boot and the 9 categories seeded by
   `backend/scripts/seed_categories.py` (idempotent). The frontend does **not** use the database schema:
   it codes against the OpenAPI spec. Prisma TS declarations under `apps/web/src/generated/` are
@@ -284,6 +285,18 @@ postly/
   `docker compose exec api python scripts/seed_areas.py` (`--offline` forbids the 21 MB download). The
   dataset's quirks and the cleaning rules are documented in `docs/GEO_DATA.md`. The seed is **not** part of
   the container boot — a fresh database has no areas.
+- **The areas API is live** (T-014, T-014b): `GET /api/v1/areas/search?q=&limit=` (six digits = exact PIN,
+  otherwise a case-insensitive substring over the area's display name, its **aliases** — every office name of
+  that PIN, so "Karol Bagh" finds 110005 — and its district; `%`, `_` and `\` are literal characters) and
+  `GET /api/v1/areas/detect?lat=&lng=` (nearest area, **always** — no distance cut-off — with
+  `distance_meters`), plus `GET /api/v1/categories`. No external calls; the nearest-area scan is cached
+  in-process for 60 s.
+- **Post CRUD is live** (T-015): `POST /api/v1/posts` (201), `GET|PATCH|DELETE /api/v1/posts/{id}` for Google,
+  pseudonymous and ghost callers. The id may be client-generated (ghosts need it to pre-compute the
+  `owner_key`), the alias is snapshotted on the row, coordinates are rounded to 3 decimals, and the response
+  is an explicit allow-list — `ghostOwnerKey`, `secretHash` and `tokenHash` never appear. The `owner_key`
+  encoding is now pinned in `docs/API.md` §4 (base64url, body transport). `GET /areas/{id}` returns the area
+  with its `post_count`.
 - Versions are already pinned and researched in `docs/research/00-versions.md` — do not re-derive them.
 - The repo is a git repository on branch `main`. **The manager may commit**; workers must not.
 
