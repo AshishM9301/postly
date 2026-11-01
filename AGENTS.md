@@ -309,6 +309,11 @@ postly/
   votes cannot be joined across posts). The response carries the fresh counters. `BLAME` is T-050.
   The `Vote` table has **no timestamp** and **no FK to its target** — deleting a post orphans its votes
   (T-021 must sweep them).
+- **Comments are live** (T-018): `POST|GET /api/v1/posts/{id}/comments`, `PATCH|DELETE /api/v1/comments/{id}`
+  for all three identity modes. Threads nest to `depth ≤ 3` (a deeper reply is a 422, not flattened), the
+  listing is flat + cursor-paginated (`parent_id`/`depth` rebuild the tree), and **deleting a comment keeps
+  its replies** — the children are promoted to top level and the subtree shifts up. `Post.comment_count` is
+  maintained in the same transaction.
 - Versions are already pinned and researched in `docs/research/00-versions.md` — do not re-derive them.
 - The repo is a git repository on branch `main`. **The manager may commit**; workers must not.
 
