@@ -297,6 +297,12 @@ postly/
   is an explicit allow-list — `ghostOwnerKey`, `secretHash` and `tokenHash` never appear. The `owner_key`
   encoding is now pinned in `docs/API.md` §4 (base64url, body transport). `GET /areas/{id}` returns the area
   with its `post_count`.
+- **Media is live** (T-016): `POST /api/v1/media` (multipart, 20 MB cap, Pillow content sniffing, 4×3
+  blurHash), `GET /api/v1/media/{id}/signed` (300 s) and `GET /api/v1/media/{id}/file?expires=&sig=` (the only
+  reader — there is **no** static mount of `backend/media/`). The signature is
+  `HMAC-SHA256(SECRET_KEY, "{media_id}:{expires}")`, separate from the ownership `PEPPER`; deleting the row
+  revokes a live URL. `blurhash==1.1.5` is pinned — **rebuild the `api` image** (`docker compose build api`)
+  so the image has it, not just the running container.
 - Versions are already pinned and researched in `docs/research/00-versions.md` — do not re-derive them.
 - The repo is a git repository on branch `main`. **The manager may commit**; workers must not.
 

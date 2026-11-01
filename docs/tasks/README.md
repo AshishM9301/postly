@@ -30,7 +30,7 @@ Legend: `[ ]` ready · `[~]` in-progress · `[>]` review · `[x]` done · `[!]` 
 | T-014 | Areas API: PIN lookup, GPS nearest, name search | [x] | s-20261101-0810 | T-013 |
 | T-014b | Area name aliases: search every locality name of a PIN | [x] | s-20261101-0810 | T-013, T-014 |
 | T-015 | Post CRUD + client-generated ids + alias snapshot | [x] | s-20261101-0810 | T-011, T-014 |
-| T-016 | Media upload + blurHash + signed-URL serving | [ ] | - | T-015 |
+| T-016 | Media upload + blurHash + signed-URL serving | [x] | s-20261101-0810 | T-015 |
 | T-017 | Votes (up/down) + salted voter keys + counters | [ ] | - | T-015 |
 | T-018 | Comments + nested threads + comment votes | [ ] | - | T-015, T-017 |
 | T-019 | Feed tabs (for-you / trending / new / nearby) + ranking | [ ] | - | T-016, T-017, T-018 |
