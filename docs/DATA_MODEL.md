@@ -1,6 +1,6 @@
 # DATA MODEL
 
-17 tables. `backend/prisma/schema.prisma` is the source of truth — this document explains *why* each table
+18 tables. `backend/prisma/schema.prisma` is the source of truth — this document explains *why* each table
 looks the way it does. T-010 writes the schema; if it and this document disagree, the schema wins and this
 document gets updated in the same task.
 
@@ -60,6 +60,18 @@ One row per **Delhi PIN code**.
 | `isActive` | `Boolean @default(true)` | |
 
 Seed source and rules: `docs/GEO_DATA.md`.
+
+### AreaName
+Every distinct locality name a PIN contains, so search matches the neighbourhood people type and not only the
+main post office. `Area.name` stays the display name; these rows only widen search.
+| Field | Type | Notes |
+|---|---|---|
+| `id` | `String @id @default(cuid())` | |
+| `areaId` | `String` | → `Area`, **cascade delete** |
+| `name` | `String` | suffix-stripped office name, e.g. `Karol Bagh` |
+| `createdAt` | `DateTime` | |
+
+Indexes: `@@unique([areaId, name])`, `(name)`. Seeded with the areas (549 rows today; 547 distinct names).
 
 ---
 

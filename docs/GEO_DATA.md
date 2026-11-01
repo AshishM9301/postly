@@ -48,7 +48,7 @@ For You) and how they are grouped.
 
 ## 2. Seed rule
 
-`backend/scripts/seed_areas.py` (task T-013):
+`backend/scripts/seed_areas.py` (tasks T-013, T-014b):
 
 ```
 for each row where statename.strip().upper() == 'DELHI':
@@ -62,15 +62,25 @@ group by pincode:
     radiusMeters = max(haversine(center, other offices), floor 1500)
                    ignoring offices > 20 km from the centre (bad coordinates)
     officeCount  = number of distinct office names for this pin
+    aliases      = every distinct strip_office_suffix(office name) for this pin
+                   -> one AreaName row each (same PIN only)
 ```
 
-Idempotent: re-running updates rows instead of duplicating them (upsert on `pincode`). The CSV is cached in
+Idempotent: re-running updates rows instead of duplicating them (upsert on `pincode`). Aliases are reconciled
+per area (stale names deleted, current names inserted with `ON CONFLICT DO NOTHING`). The CSV is cached in
 `backend/.cache/pincode.csv` (gitignored); the script downloads it if missing and `--offline` refuses to.
 
 **Verified result (2026-11-01):** 103 PINs inserted, **0** without coordinates, 0 skipped. District casing and
 suffix stripping checked with SQL (`0` rows with a non-upper district, `0` names ending in an office suffix).
 Radius range **1500–11,869 m**; officeCount **1–23**. Re-running the seed leaves the row count at 103 and the
 `md5(string_agg(...))` snapshot unchanged (`899a7e7e37aaaea8cb3c527f4e716e01`).
+
+**Aliases (T-014b):** **549** `area_names` rows, **547** distinct names, **0** orphans, **0** duplicate
+`(area_id, name)` pairs. The 549 vs 547 gap is **cross-PIN**, not within-PIN: two locality names exist in two
+different PINs (`Sant Nagar` in 110065 and 110084, `Shivaji Park` in 110026 and 110032), so each area keeps its
+own row — `@@unique([areaId, name])` is per area and never merges them. Example: PIN `110005` keeps
+`Desh Bandhu Gupta Road` as its display name and also stores `Karol Bagh`, `Sat Nagar`, `Anand Parbat`, … as
+searchable aliases. Search matches these plus `Area.name` and `Area.district`.
 
 ## 3. Runtime resolution — zero external calls on the hot path
 

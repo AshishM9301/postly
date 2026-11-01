@@ -10,7 +10,9 @@ import math
 from scripts.seed_areas import (
     MIN_RADIUS_METERS,
     Office,
+    alias_names,
     build_area,
+    build_areas,
     haversine_meters,
     normalise_district,
     parse_coordinate,
@@ -179,6 +181,23 @@ def test_radius_ignores_an_office_with_an_impossible_coordinate() -> None:
     assert area["radiusMeters"] == max(MIN_RADIUS_METERS, expected)
     assert area["radiusMeters"] < 5000
     assert area["officeCount"] == 3
+
+
+def test_alias_names_are_stripped_deduplicated_and_same_pin_only() -> None:
+    grouped = {
+        "110005": [
+            office("Karol Bagh SO"),
+            office("Karol Bagh BO"),
+            office("Desh Bandhu Gupta Road SO"),
+        ],
+        "110058": [office("Janakpuri A 3 S.O")],
+    }
+
+    _areas, aliases, _skipped = build_areas(grouped)
+
+    assert aliases["110005"] == ["Desh Bandhu Gupta Road", "Karol Bagh"]
+    assert aliases["110058"] == ["Janakpuri A 3"]
+    assert alias_names(grouped["110005"]) == ["Desh Bandhu Gupta Road", "Karol Bagh"]
 
 
 def test_area_without_any_coordinate_is_skipped() -> None:

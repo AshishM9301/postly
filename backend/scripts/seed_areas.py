@@ -201,8 +201,17 @@ def group_by_pincode(rows: Iterable[tuple[str, Office]]) -> dict[str, list[Offic
     return grouped
 
 
-def build_areas(grouped: Mapping[str, list[Office]]) -> tuple[list[dict[str, object]], list[str]]:
+def alias_names(offices: list[Office]) -> list[str]:
+    """Every distinct, suffix-stripped office name for one PIN."""
+    names = {strip_office_suffix(office.name) for office in offices}
+    return sorted(name for name in names if name)
+
+
+def build_areas(
+    grouped: Mapping[str, list[Office]],
+) -> tuple[list[dict[str, object]], dict[str, list[str]], list[str]]:
     areas: list[dict[str, object]] = []
+    aliases: dict[str, list[str]] = {}
     skipped: list[str] = []
     for pincode in sorted(grouped):
         area = build_area(pincode, grouped[pincode])
@@ -210,7 +219,8 @@ def build_areas(grouped: Mapping[str, list[Office]]) -> tuple[list[dict[str, obj
             skipped.append(pincode)
         else:
             areas.append(area)
-    return areas, skipped
+            aliases[pincode] = alias_names(grouped[pincode])
+    return areas, aliases, skipped
 
 
 def download_dataset(destination: Path) -> None:
@@ -223,22 +233,36 @@ def download_dataset(destination: Path) -> None:
     temporary.replace(destination)
 
 
-def read_areas(csv_path: Path) -> tuple[list[dict[str, object]], list[str]]:
+def read_areas(
+    csv_path: Path,
+) -> tuple[list[dict[str, object]], dict[str, list[str]], list[str]]:
     with csv_path.open("r", encoding="utf-8", newline="") as handle:
         grouped = group_by_pincode(iter_delhi_offices(handle))
     return build_areas(grouped)
 
 
-async def seed_areas(areas: list[dict[str, object]]) -> int:
+async def seed_areas(
+    areas: list[dict[str, object]], aliases: Mapping[str, list[str]]
+) -> tuple[int, int]:
     db = Prisma()
     await db.connect()
     try:
         for area in areas:
-            await db.area.upsert(
-                where={"pincode": area["pincode"]},
+            pincode = str(area["pincode"])
+            row = await db.area.upsert(
+                where={"pincode": pincode},
                 data={"create": area, "update": area},
             )
-        return await db.area.count()
+
+            names = aliases.get(pincode, [])
+            await db.areaname.delete_many(where={"areaId": row.id, "name": {"notIn": names}})
+            if names:
+                await db.areaname.create_many(
+                    data=[{"areaId": row.id, "name": name} for name in names],
+                    skip_duplicates=True,
+                )
+
+        return await db.area.count(), await db.areaname.count()
     finally:
         await db.disconnect()
 
@@ -260,15 +284,16 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         download_dataset(csv_path)
 
-    areas, skipped = read_areas(csv_path)
+    areas, aliases, skipped = read_areas(csv_path)
     missing_coordinates = [area["pincode"] for area in areas if area["lat"] is None]
 
-    total = asyncio.run(seed_areas(areas))
+    total_areas, total_aliases = asyncio.run(seed_areas(areas, aliases))
 
     print(f"seed_areas: {len(areas)} Delhi PINs upserted")
     print(f"seed_areas: {len(missing_coordinates)} without coordinates")
     print(f"seed_areas: {len(skipped)} skipped (no usable centre): {', '.join(skipped) or '-'}")
-    print(f"seed_areas: {total} areas present in the database")
+    print(f"seed_areas: {total_aliases} area-name aliases present")
+    print(f"seed_areas: {total_areas} areas present in the database")
     return 0
 
 

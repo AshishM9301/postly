@@ -134,8 +134,24 @@ model Area {
 
   posts       Post[]
   areaFollows AreaFollow[]
+  names       AreaName[]
 
   @@map("areas")
+}
+
+/// Every locality/office name a PIN contains, stripped of the office suffix.
+/// `Area.name` is the display name; these rows only widen search.
+model AreaName {
+  id        String   @id @default(cuid()) @map("id")
+  areaId    String   @map("area_id")
+  name      String   @map("name")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  area Area @relation(fields: [areaId], references: [id], onDelete: Cascade)
+
+  @@unique([areaId, name])
+  @@index([name])
+  @@map("area_names")
 }
 
 // ---------------------------------------------------------------------------

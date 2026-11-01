@@ -64,16 +64,57 @@ unauthorized`.
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| GET | `/areas/search?q=` | no | search areas by name / PIN code |
+| GET | `/areas/search?q=&limit=` | no | search areas by name / district / PIN code |
 | GET | `/areas/detect?lat=&lng=` | no | nearest area for a coordinate (Haversine) |
 | GET | `/areas/{id}` | no | one area with post counts |
 | GET | `/categories` | no | all categories |
 
-`/areas/detect` response:
+`/areas/search`:
+
+- a **six-digit** `q` is treated as an exact PIN code (one result or none); it never falls back to a name
+  match.
+- anything else is a case-insensitive substring match on the area's display `name`, its stored aliases
+  (every suffix-stripped office name belonging to that PIN, e.g. `Karol Bagh` for `110005`), **or** its
+  `district`.
+- `%`, `_` and `\` are matched as **literal characters**, not LIKE wildcards (`?q=%` returns `[]`).
+- `limit` defaults to `10` and is capped at `25`. Results are ordered by `pincode`.
+
 ```json
-{ "data": { "id": "…", "pincode": "110019", "name": "Kirti Nagar",
-             "district": "NORTH WEST", "lat": 28.63, "lng": 77.07,
+{ "data": [
+  { "id": "…", "pincode": "110058", "name": "Janakpuri A 3",
+    "district": "WEST", "lat": 28.6241111, "lng": 77.0793611 }
+] }
+```
+
+`/areas/detect` (`lat` −90..90, `lng` −180..180):
+
+- Always returns the **nearest active area**, even for a coordinate outside Delhi — there is no distance
+  cut-off (the client can judge the distance). `404 area_not_found` only when the table has no active
+  areas.
+- `distance_meters` is an integer: Haversine on a 6,371,000 m sphere.
+- The candidate list is bounded and cached in-process for 60 seconds (103 rows today).
+
+```json
+{ "data": { "id": "…", "pincode": "110019", "name": "Alaknanda",
+             "district": "SOUTH EAST", "lat": 28.5256389, "lng": 77.2541667,
              "distance_meters": 412 } }
+```
+
+`/areas/{id}` returns one active area plus its post count (`404 area_not_found` otherwise):
+
+```json
+{ "data": { "id": "…", "pincode": "110019", "name": "Alaknanda",
+             "district": "SOUTH EAST", "lat": 28.5256389, "lng": 77.2541667,
+             "post_count": 0 } }
+```
+
+`/categories` returns every category ordered by `sort_order`:
+
+```json
+{ "data": [
+  { "id": "…", "name": "Pothole", "slug": "pothole",
+    "icon": "traffic-cone", "color": "#f97316", "sort_order": 1 }
+] }
 ```
 
 ## 4. Posts
@@ -89,19 +130,54 @@ unauthorized`.
 | POST | `/posts/{id}/removal-request` | no | moderator-assisted removal (lost key path) |
 | POST | `/posts/{id}/views` | no | view counter (idempotent per viewer key) |
 
-Create body:
+Create body (`201 Created`):
 ```json
 {
-  "id": "3f2c…uuid",
+  "id": "3f2c…uuid",                    // optional; clients (ghosts) may generate it
   "title": "Deep pothole near the gate",
   "body": "Three bikes have crashed here this week.",
   "area_id": "…",
   "category_id": "…",
-  "media_ids": ["…"],
-  "owner_key": "HMAC(postKey, id)",     // ghost only
-  "lat": 28.63, "lng": 77.07            // optional, rounded server-side
+  "alias": "Neighbor_7f3a",             // ghost only, required — stored as a snapshot
+  "owner_key": "HMAC(postKey, id)",     // ghost only, required — see below for the exact encoding
+  "blame_category": "MUNICIPALITY",     // optional enum; private individuals are not allowed
+  "blame_label": "MCD",                 // optional, requires blame_category
+  "status": "OPEN",                     // only OPEN accepted on create (workflow is T-050)
+  "lat": 28.63, "lng": 77.07,           // optional, rounded to 3 decimals server-side
+  "media_ids": []                       // reserved for T-016; non-empty currently returns 422
 }
 ```
+
+The create/read/edit response is the same explicit allow-list for all three modes:
+```json
+{ "data": {
+  "id": "…", "alias": "Neighbor_7f3a", "is_anonymous": true,
+  "title": "…", "body": "…", "status": "OPEN", "moderation_state": "CLEAN",
+  "blame_category": "MUNICIPALITY", "blame_label": "MCD", "blame_vote_count": 0,
+  "upvote_count": 0, "downvote_count": 0, "comment_count": 0, "view_count": 0,
+  "lat": 28.631, "lng": 77.071, "expires_at": null,
+  "created_at": "…", "updated_at": "…",
+  "area": { "id": "…", "pincode": "110019", "name": "…", "district": "…", "lat": 0, "lng": 0 },
+  "category": { "id": "…", "name": "Pothole", "slug": "pothole", "icon": "…", "color": "…",
+                "sort_order": 1 },
+  "author": { "id": "…", "alias": "Neighbor_7f3a" },   // null for ghost content
+  "media": []
+} }
+```
+
+- `owner_key` is `base64url(HMAC-SHA256(postKey, postId))` — RFC 4648 §5 base64url (`A-Za-z0-9-_`),
+  **no `=` padding**. The secret is the HMAC **key**, the post id is the **message**. The server stores the
+  string opaquely and compares it byte-for-byte in constant time, so client and server must agree on the
+  encoding — the web client (`apps/web/src/lib/ghost/crypto.ts`) sends base64url. It travels in the JSON
+  **body** of `POST`, `PATCH` and `DELETE`, never in a header.
+- `PATCH /posts/{id}` body: `{ "title"?: string, "body"?: string, "owner_key"?: string }` — at least
+  one of title/body. Ghosts must include `owner_key`.
+- `DELETE /posts/{id}` body for ghosts: `{ "owner_key": "…" }`; returns `204 No Content`. DB rows cascade,
+  files are removed by the media service (T-016).
+- None of these responses ever contain `ghostOwnerKey`, `secretHash` or `tokenHash`; the response model is
+  an allow-list.
+- `403 not_owner` for a wrong session/`owner_key`, `404 post_not_found` for an unknown id.
+
 
 ## 5. Comments
 
