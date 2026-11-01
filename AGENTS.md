@@ -278,6 +278,12 @@ postly/
   `backend/scripts/seed_categories.py` (idempotent). The frontend does **not** use the database schema:
   it codes against the OpenAPI spec. Prisma TS declarations under `apps/web/src/generated/` are
   **gitignored** — never import them, never commit them.
+- **The 103 Delhi areas are seeded** (T-013): `backend/scripts/seed_areas.py` streams the CC0 India Post
+  `pincode.csv` (cached in `backend/.cache/`, gitignored), normalises names and districts, drops dirty
+  coordinates and upserts one `Area` row per PIN. Run it **in the container**:
+  `docker compose exec api python scripts/seed_areas.py` (`--offline` forbids the 21 MB download). The
+  dataset's quirks and the cleaning rules are documented in `docs/GEO_DATA.md`. The seed is **not** part of
+  the container boot — a fresh database has no areas.
 - Versions are already pinned and researched in `docs/research/00-versions.md` — do not re-derive them.
 - The repo is a git repository on branch `main`. **The manager may commit**; workers must not.
 
