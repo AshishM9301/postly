@@ -3,7 +3,7 @@
 **Goal:** a signed-in, pseudonymous or ghost user can post text + photo in a Delhi area, see it in the feed,
 and the community can vote and argue in comments.
 
-**Status:** in progress (T-010 … T-021 done; T-022 … T-026 are the last frontend tasks)
+**Status:** in progress (T-010 … T-022 done; T-023 … T-026 are the last frontend tasks)
 
 **Done when**
 - A post created with a photo appears in `/feed/new` and `/feed/for-you` within 5 seconds.
@@ -30,7 +30,7 @@ and the community can vote and argue in comments.
 | T-019 | Feed tabs (for-you / trending / new / nearby) + ranking | done |
 | T-020 | Frontend: feed UI, post card, composer, vote buttons | done |
 | T-021 | Delete flows: post, account, ghost purge, removal request | done |
-| T-022 | Frontend shell: left nav rail, mobile tab bar, black/red/white theme | ready |
+| T-022 | Frontend shell: left nav rail, mobile tab bar, black/red/white theme | done |
 | T-023 | Frontend comments: thread view, replies and comment votes | ready |
 | T-024 | Frontend deletion UI: delete my post, delete my account, ghost purge, removal request | ready |
 | T-025 | Frontend sign-in: pseudonymous session, session restore, sign-out | ready |
