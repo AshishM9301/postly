@@ -60,6 +60,39 @@ With a `Bearer` session token it resolves the session and returns `mode: "google
 `mode: "pseudonymous"` with the alias. A malformed, unknown, revoked or expired token is `401
 unauthorized`.
 
+`DELETE /me` is a **hard delete** and returns `204`. A Google account needs only its session. A
+pseudonymous account must also send the same client secret it signed up with:
+
+```json
+{ "secret": "the 32+ byte client secret" }
+```
+
+A missing or wrong secret is `403 invalid_secret`; ghost callers are `401 unauthorized` (there is no
+account row to delete). Deleting the account removes every post (with its media files), comment, vote,
+blame vote, follow, area follow, reveal, notification, session and push subscription that belongs to the
+user; replies to the user's comments are kept and promoted to top level.
+
+`POST /ghost/purge` deletes everything made with one ghost session secret:
+
+```json
+{ "session_key": "base64url(32-byte session secret)" }
+```
+
+`session_key` is the RFC 4648 §5 base64url (no padding) form of the raw 32-byte secret — the same
+encoding the web vault exports. The server decodes it, recomputes
+`HMAC-SHA256(raw secret, targetId)` for every ghost-owned post and comment and
+`a:base64url(HMAC-SHA256(raw secret, targetId))` for every ghost vote, then deletes only the matches.
+The secret is used for the request and never persisted. Response:
+
+```json
+{ "data": { "posts": 2, "comments": 4, "votes": 7 } }
+```
+
+The sweep is O(n) over ghost content and idempotent: a repeated purge returns counts of `0`. A
+non-canonical / non-32-byte key is `422 validation_error`. Content created with a **per-post key** rather
+than the session key does not match this sweep; delete it with `DELETE /posts/{id}` and that post's
+`owner_key`, or use the removal request below.
+
 ## 3. Areas & categories
 
 | Method | Path | Auth | Purpose |
@@ -172,8 +205,19 @@ The create/read/edit response is the same explicit allow-list for all three mode
   **body** of `POST`, `PATCH` and `DELETE`, never in a header.
 - `PATCH /posts/{id}` body: `{ "title"?: string, "body"?: string, "owner_key"?: string }` — at least
   one of title/body. Ghosts must include `owner_key`.
-- `DELETE /posts/{id}` body for ghosts: `{ "owner_key": "…" }`; returns `204 No Content`. DB rows cascade,
-  files are removed by the media service (T-016).
+- `DELETE /posts/{id}` body for ghosts: `{ "owner_key": "…" }`; returns `204 No Content`. It is a hard
+  delete of the post row, its media rows **and files**, its comments, votes (on the post and its comments),
+  blame votes, reveals, views and reports. Deleting an already-deleted post is `404 post_not_found`.
+- `POST /posts/{id}/removal-request` is the lost-key path. It needs **no ownership proof** and accepts the
+  body `{ "details": "what you wrote, when, and how a moderator can verify it" }` (`details` 1..2000
+  characters). It creates an `OPEN` report for the admin queue and returns `201`:
+
+  ```json
+  { "data": { "id": "…", "target_type": "POST", "target_id": "…",
+               "status": "OPEN", "created_at": "…" } }
+  ```
+
+  The post stays up until a moderator acts on the request. Unknown ids are `404 post_not_found`.
 - None of these responses ever contain `ghostOwnerKey`, `secretHash` or `tokenHash`; the response model is
   an allow-list.
 - `403 not_owner` for a wrong session/`owner_key`, `404 post_not_found` for an unknown id.
@@ -300,7 +344,6 @@ An invalid/forged cursor is `422 validation_error`.
 | POST | `/media` | yes (+ ghost `owner_key` form field) | multipart upload → `media_id` + `blur_hash` |
 | GET | `/media/{id}/signed` | no (signature is the auth) | short-lived signed URL; hidden media is 404 |
 | GET | `/media/{id}/file?expires=&sig=` | signed URL | the file itself; only via a valid signature |
-| DELETE | `/media/{id}` | owner | delete file + row (T-021) |
 
 Upload is **after** the post exists: `POST /media` takes multipart `file`, `post_id` and (ghost only)
 `owner_key`. Only the post's owner may attach media. Accepted types: `image/jpeg`, `image/png`, `image/webp`,
@@ -322,8 +365,9 @@ extension and declared mime are not trusted) and get a 4×3 blurHash. Size cap: 
 ```
 
 There is **no static mount** of the media directory. The signed URL is the only reader, and it stops working
-when the signature expires or the `Media` row is deleted. Per-user reveal gating (blurred/flagged content) is
-T-035.
+when the signature expires or the `Media` row is deleted. Media rows and their files are hard-deleted with
+their post (`DELETE /posts/{id}` or an account/ghost purge); there is no standalone media-delete endpoint
+yet. Per-user reveal gating (blurred/flagged content) is T-035.
 
 ## 10. Moderation & reveals
 
@@ -364,6 +408,6 @@ T-035.
 ## 14. Error codes
 
 `unauthorized` · `forbidden` · `not_found` · `validation_error` · `rate_limited` · `content_flagged` ·
-`not_owner` · `area_required` · `turnstile_failed` (reserved for launch) · `internal_error` ·
-`post_not_found` · `media_not_found` · `unsupported_media_type` · `invalid_image` · `file_too_large` ·
-`invalid_signature` · `conflict` (a client-supplied id already exists).
+`not_owner` · `invalid_secret` · `area_required` · `turnstile_failed` (reserved for launch) ·
+`internal_error` · `post_not_found` · `comment_not_found` · `media_not_found` · `unsupported_media_type` ·
+`invalid_image` · `file_too_large` · `invalid_signature` · `conflict` (a client-supplied id already exists).

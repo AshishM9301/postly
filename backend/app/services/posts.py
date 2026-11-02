@@ -8,6 +8,7 @@ from prisma.models import Post
 from app.core.deps import Principal
 from app.schemas.area import AreaOut, CategoryOut
 from app.schemas.post import AuthorOut, MediaOut, PostOut
+from app.services import media as media_service
 from app.services.ghost import assert_ghost_owner
 
 NOT_OWNER = {"code": "not_owner", "message": "This post belongs to someone else"}
@@ -56,12 +57,15 @@ def assert_post_owner(post: Post, principal: Principal, owner_key: str | None) -
 
 
 def delete_media_files(post: Post) -> None:
-    """Seam filled by T-016.
+    """Remove every file owned by the post's media rows from storage.
 
-    The DB rows cascade when the post is deleted; this hook owns removing the
-    files from disk. Until media exists it is intentionally a no-op.
+    The rows themselves cascade with the post; this only handles the bytes on
+    disk. Missing files are ignored by the storage provider.
     """
-    return None
+    for row in post.media or []:
+        for path in (row.path, row.thumbPath):
+            if path:
+                media_service.storage.delete(path)
 
 
 def post_to_response(post: Post) -> PostOut:

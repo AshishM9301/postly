@@ -12,11 +12,12 @@ from prisma.models import Post
 from app.core.deps import Principal, get_principal
 from app.db.client import db
 from app.schemas.auth import Envelope
+from app.schemas.deletion import RemovalRequestCreate, RemovalRequestOut
 from app.schemas.post import OwnerKeyBody, PostCreate, PostOut, PostUpdate
+from app.services import deletion
 from app.services.posts import (
     alias_snapshot,
     assert_post_owner,
-    delete_media_files,
     post_to_response,
     require_owner_key,
     round_coordinate,
@@ -137,18 +138,43 @@ async def update_post(
     return Envelope(data=post_to_response(updated))
 
 
+@router.post(
+    "/posts/{post_id}/removal-request",
+    status_code=201,
+    response_model=Envelope[RemovalRequestOut],
+)
+async def request_removal(
+    post_id: str,
+    body: RemovalRequestCreate,
+    principal: Annotated[Principal, Depends(get_principal)],
+) -> Envelope[RemovalRequestOut]:
+    """Ask a moderator to remove content when the owner key was lost.
+
+    No ownership proof is required: a human checks the details instead.
+    """
+    request = await deletion.create_removal_request(post_id, body.details, principal.user_id)
+    return Envelope(
+        data=RemovalRequestOut(
+            id=request.id,
+            target_type=request.targetType,
+            target_id=request.targetId,
+            status=request.status,
+            created_at=request.createdAt,
+        )
+    )
+
+
 @router.delete("/posts/{post_id}", status_code=204)
 async def delete_post(
     post_id: str,
     principal: Annotated[Principal, Depends(get_principal)],
     body: Annotated[OwnerKeyBody | None, Body()] = None,
 ) -> Response:
-    """Hard delete. DB rows cascade; files are removed by the T-016 seam."""
+    """Hard delete the post, its media files and every child row."""
     post = await db.post.find_unique(where={"id": post_id}, include={"media": True})
     if post is None:
         raise _post_not_found()
 
     assert_post_owner(post, principal, body.owner_key if body else None)
-    delete_media_files(post)
-    await db.post.delete(where={"id": post_id})
+    await deletion.delete_post(post)
     return Response(status_code=204)

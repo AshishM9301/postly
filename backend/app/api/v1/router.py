@@ -8,6 +8,7 @@ from app.api.v1 import (
     categories,
     comments,
     feed,
+    ghost,
     health,
     me,
     media,
@@ -19,6 +20,7 @@ router = APIRouter()
 router.include_router(health.router)
 router.include_router(auth.router)
 router.include_router(me.router)
+router.include_router(ghost.router)
 router.include_router(areas.router)
 router.include_router(categories.router)
 router.include_router(posts.router)

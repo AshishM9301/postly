@@ -73,12 +73,25 @@ one tap away.
 Deletion is always **hard**: rows and files on disk, never a `deletedAt` flag. A soft delete would keep the
 data we promised to erase.
 
-- Delete post → post + media files + comments + votes + reveals + views + reports.
-- Delete account → everything above for all their content + comments + votes + follows + reveals +
-  notifications + sessions + push subscriptions.
-- Delete session → that token only.
-- Lost the key → `POST /posts/{id}/removal-request` → a moderator checks the details (exact wording,
-  timestamp) and removes the content. Human judgement, not cryptography.
+- **Delete post** (`DELETE /posts/{id}`, owner session or ghost `owner_key`) → the post row, its media rows
+  **and the files in `backend/media/`**, its comments, votes on the post and on those comments, blame votes,
+  `UserReveal` rows, `PostView` rows and `Report` rows. `Vote`, `UserReveal` and `Report` have no foreign key
+  to a post/comment, so the service deletes them explicitly before the row cascade.
+- **Delete account** (`DELETE /me`) → every post above, the user's comments on other posts (their replies
+  are kept and promoted to top level), votes, blame votes, follows, area follows, reveals, notifications,
+  sessions and push subscriptions. A Google account needs its session; a **pseudonymous account must also
+  send its client secret**, checked against `secretHash`, or the request is `403 invalid_secret`. Reports
+  the user made or handled are anonymised by the schema's `SetNull`, not deleted.
+- **Ghost purge** (`POST /ghost/purge`) → every post, comment and vote made with that **session key**. The
+  client sends the base64url form of the raw 32-byte secret; the server decodes it, recomputes
+  `HMAC-SHA256(secret, targetId)` (owner key) or `a:<same>` (voter key) for candidate rows, and deletes only
+  rows whose stored key matches in constant time. The secret is never stored. The sweep is O(n) over ghost
+  content. Content created with a distinct **per-post key** is not found by the session sweep — it is
+  deleted with that post's `owner_key` or through a removal request.
+- **Delete session** → that token only.
+- **Lost the key** → `POST /posts/{id}/removal-request` creates an `OPEN` `Report` for the admin queue. No
+  ownership proof is required; a moderator checks the details (exact wording, timestamp) and removes the
+  content. Human judgement, not cryptography.
 
 ## 5. Expiry
 
