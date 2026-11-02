@@ -336,9 +336,10 @@ postly/
   per-post keys are not swept. `POST /api/v1/posts/{id}/removal-request` needs no ownership proof and
   leaves an `OPEN` report for a moderator. The contract is in `docs/API.md` §2/§4 and the matrix in
   `docs/SECURITY.md` §4. **The web app has no deletion UI yet** — that is T-024.
-- **The remaining frontend work is T-022 … T-025**: the app shell (left nav rail that expands on hover,
-  Instagram-style bottom tab bar on mobile, black/red/white theme), the comments UI, the deletion UI and
-  the sign-in UI. They close Q1.
+- **The remaining frontend work is T-022 … T-026**: the app shell (left nav rail that expands on hover,
+  Instagram-style bottom tab bar on mobile, black/red/white theme), its placement refinement (nav centred in
+  the rail, the user / night-mode / Report controls on the left, no "Postly" wordmark), the comments UI, the
+  deletion UI and the sign-in UI. They close Q1.
 - Versions are already pinned and researched in `docs/research/00-versions.md` — do not re-derive them.
 - The repo is a git repository on branch `main`. **The manager may commit**; workers must not.
 
