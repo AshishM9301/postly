@@ -326,6 +326,19 @@ postly/
   proxy (multipart uploads and DELETE bodies are forwarded correctly). There is **no sign-in UI** yet —
   the app posts as a ghost. `npm run lint`, `npm run typecheck`, `npm run build` and `npm run test:ghost`
   (17 cases) all pass.
+- **Deletion is live** (T-021): `DELETE /api/v1/posts/{id}` (owner session or ghost `owner_key`) hard-deletes
+  the post row, its **media rows and the files on disk**, its comments, the votes on the post *and* on those
+  comments, blame votes, reveals, views and reports — the polymorphic rows (`Vote`, `UserReveal`, `Report`)
+  have no FK, so they are swept explicitly. `DELETE /api/v1/me` deletes the account and everything that
+  belongs to it (a pseudonymous account must repeat its client `secret`, else `403 invalid_secret`);
+  replies to the user's comments survive and are promoted. `POST /api/v1/ghost/purge` takes the base64url
+  **session secret** and deletes only the posts, comments and votes whose salted key matches — O(n), and
+  per-post keys are not swept. `POST /api/v1/posts/{id}/removal-request` needs no ownership proof and
+  leaves an `OPEN` report for a moderator. The contract is in `docs/API.md` §2/§4 and the matrix in
+  `docs/SECURITY.md` §4. **The web app has no deletion UI yet** — that is T-024.
+- **The remaining frontend work is T-022 … T-025**: the app shell (left nav rail that expands on hover,
+  Instagram-style bottom tab bar on mobile, black/red/white theme), the comments UI, the deletion UI and
+  the sign-in UI. They close Q1.
 - Versions are already pinned and researched in `docs/research/00-versions.md` — do not re-derive them.
 - The repo is a git repository on branch `main`. **The manager may commit**; workers must not.
 
