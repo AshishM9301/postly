@@ -102,7 +102,7 @@ export function AreaPicker({
       </div>
 
       {geoError ? (
-        <p className="text-xs text-rose-600 dark:text-rose-400">{geoError}</p>
+        <p className="text-xs text-destructive">{geoError}</p>
       ) : null}
 
       {debounced.length > 0 ? (

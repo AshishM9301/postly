@@ -1,19 +1,18 @@
 "use client";
 
-import { UserRound } from "lucide-react";
+import { Plus, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Composer } from "~/components/composer";
+import { useComposer } from "~/components/composer-provider";
+import { ThemeToggle } from "~/components/theme-toggle";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
-import {
-  ensureGhostIdentity,
-  rotateGhostAlias,
-} from "~/lib/identity";
+import { ensureGhostIdentity, rotateGhostAlias } from "~/lib/identity";
 
 export function AppHeader() {
   const [alias, setAlias] = useState<string | null>(null);
+  const { openComposer } = useComposer();
 
   useEffect(() => {
     let cancelled = false;
@@ -72,7 +71,16 @@ export function AppHeader() {
               {alias ?? "…"}
             </span>
           </Button>
-          <Composer />
+          <ThemeToggle className="md:hidden" />
+          <Button
+            type="button"
+            size="sm"
+            className="gap-1.5"
+            onClick={openComposer}
+          >
+            <Plus className="size-4" />
+            Report
+          </Button>
         </div>
       </div>
     </header>

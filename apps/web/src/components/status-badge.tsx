@@ -9,11 +9,10 @@ const LABELS: Record<PostStatus, string> = {
 };
 
 const STYLES: Record<PostStatus, string> = {
-  OPEN: "bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-300",
-  IN_PROGRESS: "bg-blue-100 text-blue-900 dark:bg-blue-500/15 dark:text-blue-300",
-  SOLVED:
-    "bg-emerald-100 text-emerald-900 dark:bg-emerald-500/15 dark:text-emerald-300",
-  CLOSED: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300",
+  OPEN: "bg-primary/10 text-primary",
+  IN_PROGRESS: "bg-muted text-foreground",
+  SOLVED: "bg-foreground text-background",
+  CLOSED: "bg-muted text-muted-foreground",
 };
 
 export function StatusBadge({ status }: { status: PostStatus }) {

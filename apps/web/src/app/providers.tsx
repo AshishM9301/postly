@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { useState, type ReactNode } from "react";
 
+import { ComposerProvider } from "~/components/composer-provider";
 import { Toaster } from "~/components/ui/sonner";
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -23,7 +24,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
-        {children}
+        <ComposerProvider>{children}</ComposerProvider>
         <Toaster position="top-center" />
       </QueryClientProvider>
     </ThemeProvider>

@@ -1,8 +1,8 @@
 "use client";
 
 import { Loader2, LocateFixed, MapPin } from "lucide-react";
-import { useState } from "react";
 
+import { FEED_TABS, useFeedTab } from "~/components/feed-tab-provider";
 import { FeedList } from "~/components/feed-list";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
@@ -13,48 +13,18 @@ import {
   TabsTrigger,
 } from "~/components/ui/tabs";
 import type { FeedTabName } from "~/lib/api/endpoints";
-import { getBrowserLocation, type Coordinates } from "~/lib/geo";
-
-const TABS: Array<{ value: FeedTabName; label: string }> = [
-  { value: "for-you", label: "For You" },
-  { value: "trending", label: "Trending" },
-  { value: "new", label: "New" },
-  { value: "nearby", label: "Nearby" },
-];
-
-type GeoState = "idle" | "locating" | "ready" | "error";
 
 export function FeedBoard() {
-  const [tab, setTab] = useState<FeedTabName>("for-you");
-  const [coords, setCoords] = useState<Coordinates | null>(null);
-  const [geoState, setGeoState] = useState<GeoState>("idle");
-  const [geoError, setGeoError] = useState<string | null>(null);
-
-  async function locate() {
-    setGeoState("locating");
-    setGeoError(null);
-    try {
-      const position = await getBrowserLocation();
-      setCoords(position);
-      setGeoState("ready");
-    } catch (error) {
-      setGeoError(error instanceof Error ? error.message : "Location unavailable.");
-      setGeoState("error");
-    }
-  }
+  const { tab, coords, geoState, geoError, selectTab, locate } = useFeedTab();
 
   function changeTab(value: string | number) {
-    const next = String(value) as FeedTabName;
-    setTab(next);
-    if (next === "nearby" && coords === null && geoState !== "locating") {
-      void locate();
-    }
+    selectTab(String(value) as FeedTabName);
   }
 
   return (
     <Tabs value={tab} onValueChange={changeTab} className="w-full">
       <TabsList variant="line" className="grid w-full grid-cols-4">
-        {TABS.map((item) => (
+        {FEED_TABS.map((item) => (
           <TabsTrigger key={item.value} value={item.value} className="px-1">
             {item.label}
           </TabsTrigger>

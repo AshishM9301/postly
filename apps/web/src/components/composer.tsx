@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ImagePlus, Loader2, Plus, X } from "lucide-react";
+import { ImagePlus, Loader2, X } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
@@ -14,7 +14,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -34,17 +33,19 @@ import {
   type AreaOut,
 } from "~/lib/api/endpoints";
 import type { Coordinates } from "~/lib/geo";
-import {
-  createGhostPostIdentity,
-  ensureGhostIdentity,
-} from "~/lib/identity";
+import { createGhostPostIdentity } from "~/lib/identity";
 import { deletePostKey } from "~/lib/ghost";
 
 type Stage = "idle" | "posting" | "uploading";
 
-export function Composer() {
+export function ComposerDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -139,7 +140,7 @@ export function Composer() {
       await queryClient.invalidateQueries({ queryKey: ["feed"] });
       toast.success("Problem reported");
       reset();
-      setOpen(false);
+      onOpenChange(false);
     } catch (submitError) {
       if (!created) {
         try {
@@ -158,25 +159,10 @@ export function Composer() {
     }
   }
 
-  async function openComposer(next: boolean) {
-    setOpen(next);
-    if (next) {
-      await ensureGhostIdentity();
-    }
-  }
-
   const busy = stage !== "idle";
 
   return (
-    <Dialog open={open} onOpenChange={(next) => void openComposer(next)}>
-      <DialogTrigger
-        render={
-          <Button type="button" size="sm" className="gap-1.5">
-            <Plus className="size-4" />
-            Report
-          </Button>
-        }
-      />
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Report a problem</DialogTitle>
@@ -288,7 +274,7 @@ export function Composer() {
           ) : null}
 
           {error ? (
-            <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
+            <p role="alert" className="text-sm text-destructive">
               {error}
             </p>
           ) : null}
@@ -298,7 +284,7 @@ export function Composer() {
               type="button"
               variant="outline"
               disabled={busy}
-              onClick={() => setOpen(false)}
+              onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>

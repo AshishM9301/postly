@@ -82,9 +82,7 @@ export function VoteButtons({
         type="button"
         size="sm"
         variant={mounted && myVote === 1 ? "secondary" : "outline"}
-        className={
-          mounted && myVote === 1 ? "text-emerald-700 dark:text-emerald-300" : ""
-        }
+        className={mounted && myVote === 1 ? "text-primary" : ""}
         aria-pressed={mounted && myVote === 1}
         aria-label="Upvote"
         disabled={mutation.isPending}
@@ -97,9 +95,7 @@ export function VoteButtons({
         type="button"
         size="sm"
         variant={mounted && myVote === -1 ? "secondary" : "outline"}
-        className={
-          mounted && myVote === -1 ? "text-rose-700 dark:text-rose-300" : ""
-        }
+        className={mounted && myVote === -1 ? "text-destructive" : ""}
         aria-pressed={mounted && myVote === -1}
         aria-label="Downvote"
         disabled={mutation.isPending}
