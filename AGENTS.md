@@ -319,6 +319,13 @@ postly/
   `engagement * exp(-age_hours / half_life) * area_boost * affinity_boost` (half-lives 12 h / 18 h, env
   configurable). The cursor pins `now` so page 2 reproduces page 1's scores; HIDDEN posts never appear.
   The formula and the boost rules are in `docs/API.md` §7.
+- **The web app is live** (T-020): `apps/web` is a Next.js 15 client-rendered app with shadcn
+  (`base-nova` → `@base-ui/react`), TanStack Query and the four feed tabs, a post card with a blurHash
+  placeholder over the signed-URL route, optimistic vote buttons and a ghost composer (PIN / name / GPS
+  area picker). The page is served at `http://localhost:3000` and the API goes through the Next rewrite
+  proxy (multipart uploads and DELETE bodies are forwarded correctly). There is **no sign-in UI** yet —
+  the app posts as a ghost. `npm run lint`, `npm run typecheck`, `npm run build` and `npm run test:ghost`
+  (17 cases) all pass.
 - Versions are already pinned and researched in `docs/research/00-versions.md` — do not re-derive them.
 - The repo is a git repository on branch `main`. **The manager may commit**; workers must not.
 
