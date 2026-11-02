@@ -1,10 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { MapPin, MessageCircle, UserRound } from "lucide-react";
+import { MapPin, UserRound } from "lucide-react";
 
 import { BlurhashImage } from "~/components/blurhash-image";
 import { CategoryIcon } from "~/components/category-icon";
+import { PostComments } from "~/components/post-comments";
 import { StatusBadge } from "~/components/status-badge";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
@@ -86,15 +87,11 @@ export function PostCard({ post }: { post: FeedPost }) {
 
       <div className="flex items-center justify-between gap-2 border-t px-4 py-2.5">
         <VoteButtons
-          postId={post.id}
+          targetId={post.id}
           initialUpvotes={post.upvote_count}
           initialDownvotes={post.downvote_count}
         />
-        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <MessageCircle className="size-4" aria-hidden="true" />
-          <span className="tabular-nums">{post.comment_count}</span>
-          <span className="sr-only">comments</span>
-        </div>
+        <PostComments post={post} />
       </div>
     </Card>
   );

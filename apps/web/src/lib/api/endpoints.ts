@@ -4,6 +4,9 @@ import type { components } from "./types";
 export type AreaOut = components["schemas"]["AreaOut"];
 export type AreaDetection = components["schemas"]["AreaDetection"];
 export type CategoryOut = components["schemas"]["CategoryOut"];
+export type CommentCreate = components["schemas"]["CommentCreate"];
+export type CommentOut = components["schemas"]["CommentOut"];
+export type CommentPage = components["schemas"]["CommentPage"];
 export type FeedPost = components["schemas"]["FeedPost"];
 export type FeedPage = components["schemas"]["FeedPage"];
 export type MediaUploadOut = components["schemas"]["MediaUploadOut"];
@@ -27,6 +30,11 @@ export type NearbyQuery = FeedQuery & {
   lat: number;
   lng: number;
   radiusM?: number;
+};
+
+export type CommentQuery = {
+  limit?: number;
+  cursor?: string | null;
 };
 
 function queryParams(query: FeedQuery): Record<string, string | number | undefined> {
@@ -103,6 +111,50 @@ export async function uploadMedia(
 
 export async function getSignedMediaUrl(mediaId: string): Promise<SignedUrlOut> {
   return api.request<SignedUrlOut>(`/media/${mediaId}/signed`);
+}
+
+export async function getComments(
+  postId: string,
+  query: CommentQuery = {},
+): Promise<CommentPage> {
+  const envelope = await api.requestEnvelope<CommentOut[]>(
+    `/posts/${postId}/comments`,
+    {
+      query: {
+        limit: query.limit,
+        cursor: query.cursor ?? undefined,
+      },
+    },
+  );
+
+  const meta = envelope.meta ?? {};
+  return {
+    data: envelope.data,
+    meta: {
+      cursor: typeof meta.cursor === "string" ? meta.cursor : null,
+      has_more: Boolean(meta.has_more),
+    },
+  };
+}
+
+export async function createComment(
+  postId: string,
+  body: CommentCreate,
+): Promise<CommentOut> {
+  return api.request<CommentOut>(`/posts/${postId}/comments`, {
+    method: "POST",
+    body,
+  });
+}
+
+export async function deleteComment(
+  commentId: string,
+  ownerKey: string,
+): Promise<void> {
+  await api.requestVoid(`/comments/${commentId}`, {
+    method: "DELETE",
+    body: { owner_key: ownerKey },
+  });
 }
 
 export async function castVote(

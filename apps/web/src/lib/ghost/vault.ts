@@ -19,6 +19,7 @@ const DB_VERSION = 1;
 const STORE_NAME = "keys";
 const SESSION_ID = "session";
 const POST_PREFIX = "post:";
+const COMMENT_PREFIX = "comment:";
 
 export type GhostVaultErrorCode =
   | "indexeddb_unavailable"
@@ -43,7 +44,7 @@ export class GhostVaultError extends Error {
 
 type StoredKey = {
   id: string;
-  kind: "session" | "post";
+  kind: "session" | "post" | "comment";
   key: string;
   alias?: string;
   createdAt: string;
@@ -80,6 +81,10 @@ let databasePromise: Promise<IDBDatabase> | null = null;
 
 function postRecordId(postId: string): string {
   return `${POST_PREFIX}${postId}`;
+}
+
+function commentRecordId(commentId: string): string {
+  return `${COMMENT_PREFIX}${commentId}`;
 }
 
 function decodeStoredKey(value: string): GhostSecret {
@@ -265,6 +270,42 @@ export async function deletePostKey(postId: string): Promise<void> {
   );
 }
 
+export async function saveCommentKey(
+  commentId: string,
+  secret: GhostSecret,
+  alias?: string | null,
+): Promise<void> {
+  const record: StoredKey = {
+    id: commentRecordId(commentId),
+    kind: "comment",
+    key: toBase64Url(secret),
+    createdAt: new Date().toISOString(),
+  };
+  if (alias) {
+    record.alias = alias;
+  }
+  await putRecords([record]);
+}
+
+export async function getCommentKey(
+  commentId: string,
+): Promise<GhostSecret | null> {
+  const record = await withStore<StoredKey | undefined>(
+    "readonly",
+    (store) =>
+      store.get(commentRecordId(commentId)) as IDBRequest<
+        StoredKey | undefined
+      >,
+  );
+  return record === undefined ? null : decodeStoredKey(record.key);
+}
+
+export async function deleteCommentKey(commentId: string): Promise<void> {
+  await withStore<undefined>("readwrite", (store) =>
+    store.delete(commentRecordId(commentId)),
+  );
+}
+
 async function allRecords(): Promise<StoredKey[]> {
   return withStore<StoredKey[]>(
     "readonly",
@@ -275,6 +316,15 @@ async function allRecords(): Promise<StoredKey[]> {
 /** Ids of ghost posts whose secret is still on this device. */
 export async function listOwnPosts(): Promise<string[]> {
   return (await listOwnPostEntries()).map((entry) => entry.id);
+}
+
+/** Ids of ghost comments whose secret is still on this device. */
+export async function listOwnCommentIds(): Promise<string[]> {
+  const records = await allRecords();
+  return records
+    .filter((record) => record.kind === "comment")
+    .sort((left, right) => left.createdAt.localeCompare(right.createdAt))
+    .map((record) => record.id.slice(COMMENT_PREFIX.length));
 }
 
 export async function listOwnPostEntries(): Promise<GhostPostEntry[]> {

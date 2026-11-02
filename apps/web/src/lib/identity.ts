@@ -4,9 +4,11 @@ import {
   deriveOwnerKey,
   ensureSessionAlias,
   generateSecret,
+  getCommentKey,
   getPostKey,
   getSessionKey,
   rotateAlias,
+  saveCommentKey,
   savePostKey,
   saveSessionKey,
 } from "~/lib/ghost";
@@ -17,6 +19,11 @@ export type GhostIdentity = {
 };
 
 export type GhostPostIdentity = {
+  alias: string;
+  ownerKey: string;
+};
+
+export type GhostCommentIdentity = {
   alias: string;
   ownerKey: string;
 };
@@ -53,6 +60,27 @@ export async function ownerKeyForPost(postId: string): Promise<string | null> {
     return null;
   }
   return deriveOwnerKey(postKey, postId);
+}
+
+/** Save a fresh per-comment key and derive the owner key for this comment id. */
+export async function createGhostCommentIdentity(
+  commentId: string,
+): Promise<GhostCommentIdentity> {
+  const { alias } = await ensureGhostIdentity();
+  const commentKey = generateSecret();
+  await saveCommentKey(commentId, commentKey, alias);
+  return { alias, ownerKey: await deriveOwnerKey(commentKey, commentId) };
+}
+
+/** Recompute the owner key for an existing comment (delete/edit). */
+export async function ownerKeyForComment(
+  commentId: string,
+): Promise<string | null> {
+  const commentKey = await getCommentKey(commentId);
+  if (commentKey === null) {
+    return null;
+  }
+  return deriveOwnerKey(commentKey, commentId);
 }
 
 /** Ghost votes are keyed per target: `a:HMAC(sessionKey, targetId)`. */

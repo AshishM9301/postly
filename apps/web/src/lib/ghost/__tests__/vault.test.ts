@@ -7,14 +7,18 @@ import { deriveOwnerKey, generateSecret } from "../crypto.ts";
 import {
   closeVault,
   countOwnPosts,
+  deleteCommentKey,
   deleteOwnPost,
   exportVaultJson,
+  getCommentKey,
   getPostKey,
   getSessionKey,
   GhostVaultError,
   importVault,
+  listOwnCommentIds,
   listOwnPosts,
   resetVault,
+  saveCommentKey,
   savePostKey,
   saveSessionKey,
   type GhostVaultErrorCode,
@@ -45,6 +49,22 @@ describe("ghost key vault", () => {
     assert.deepEqual(await getPostKey("post-1"), postSecret);
     assert.deepEqual(await listOwnPosts(), ["post-1"]);
     assert.equal(await countOwnPosts(), 1);
+  });
+
+  it("stores comment keys separately from post keys", async () => {
+    const commentSecret = generateSecret();
+
+    await saveCommentKey("comment-1", commentSecret, "Neighbor_cccc");
+
+    assert.deepEqual(await getCommentKey("comment-1"), commentSecret);
+    assert.deepEqual(await listOwnCommentIds(), ["comment-1"]);
+    assert.deepEqual(await listOwnPosts(), []);
+    assert.equal(await countOwnPosts(), 0);
+
+    await deleteCommentKey("comment-1");
+
+    assert.equal(await getCommentKey("comment-1"), null);
+    assert.deepEqual(await listOwnCommentIds(), []);
   });
 
   it("exports to JSON and imports it back", async () => {

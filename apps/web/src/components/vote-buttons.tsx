@@ -11,11 +11,13 @@ import { voterKeyFor } from "~/lib/identity";
 import { getMyVote, setMyVote, type VoteValue } from "~/lib/votes-store";
 
 export function VoteButtons({
-  postId,
+  targetId,
+  targetType = "POST",
   initialUpvotes,
   initialDownvotes,
 }: {
-  postId: string;
+  targetId: string;
+  targetType?: "POST" | "COMMENT";
   initialUpvotes: number;
   initialDownvotes: number;
 }) {
@@ -30,28 +32,33 @@ export function VoteButtons({
   });
 
   useEffect(() => {
-    setMyVoteState(getMyVote(postId));
+    setMyVoteState(getMyVote(targetId));
     setMounted(true);
-  }, [postId]);
+  }, [targetId]);
+
+  useEffect(() => {
+    setUpvotes(initialUpvotes);
+    setDownvotes(initialDownvotes);
+  }, [initialUpvotes, initialDownvotes]);
 
   const mutation = useMutation({
     mutationFn: async (next: VoteValue | null) => {
-      const voterKey = await voterKeyFor(postId);
+      const voterKey = await voterKeyFor(targetId);
       return next === null
-        ? removeVote("POST", postId, voterKey)
-        : castVote("POST", postId, next, voterKey);
+        ? removeVote(targetType, targetId, voterKey)
+        : castVote(targetType, targetId, next, voterKey);
     },
     onSuccess: (result) => {
       setUpvotes(result.upvote_count);
       setDownvotes(result.downvote_count);
       setMyVoteState(result.value);
-      setMyVote(postId, result.value);
+      setMyVote(targetId, result.value);
     },
     onError: (error) => {
       setUpvotes(previous.current.upvotes);
       setDownvotes(previous.current.downvotes);
       setMyVoteState(previous.current.myVote);
-      setMyVote(postId, previous.current.myVote);
+      setMyVote(targetId, previous.current.myVote);
       toast.error(error instanceof Error ? error.message : "Could not save your vote");
     },
   });
@@ -77,7 +84,10 @@ export function VoteButtons({
   }
 
   return (
-    <div className="flex items-center gap-1.5" aria-label="Vote on this post">
+    <div
+      className="flex items-center gap-1.5"
+      aria-label={`Vote on this ${targetType === "COMMENT" ? "comment" : "post"}`}
+    >
       <Button
         type="button"
         size="sm"
