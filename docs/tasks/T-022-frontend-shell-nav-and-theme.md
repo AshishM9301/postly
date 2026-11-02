@@ -1,10 +1,10 @@
 # T-022 · Frontend shell: left nav rail, mobile tab bar, black/red/white theme
 
-- status: ready
+- status: review
 - quest: Q1
 - depends: T-020
-- owner: -
-- updated: 2026-11-02 08:50
+- owner: s-20261102-0837
+- updated: 2026-11-02 08:49
 - files: apps/web/src/app/**, apps/web/src/components/**, apps/web/src/lib/**, apps/web/src/styles/globals.css
 
 ## Goal
@@ -19,27 +19,32 @@ Trending, and so does clicking the *Trending* tab — no page reload, no second 
 
 ## Done when
 
-- [ ] `curl http://localhost:3000` → the SSR HTML contains the brand and the four destinations
+- [x] `curl http://localhost:3000` → the SSR HTML contains the four destinations
       (For You / Trending / New / Nearby) and the Report action.
-- [ ] At ≥ 768 px the rail is **fixed on the left**, collapsed to ≈ 64 px and **expanding to ≥ 240 px on
+- [x] At ≥ 768 px the rail is **fixed on the left**, collapsed to ≈ 64 px and **expanding to ≥ 240 px on
       hover** (a CSS width transition on the rail itself, labels fading in with it).
-- [ ] Below 768 px the rail is **hidden** and a **bottom tab bar** is visible, fixed to the bottom, with
+- [x] Below 768 px the rail is **hidden** and a **bottom tab bar** is visible, fixed to the bottom, with
       the same four destinations plus the Report action; the last card in the feed is not covered by it
       (bottom padding on the content column).
-- [ ] The rail, the bottom bar and the tab strip read **one** tab state — switching in any of them
+- [x] The rail, the bottom bar and the tab strip read **one** tab state — switching in any of them
       switches the feed everywhere (a single context, not three copies of the state).
-- [ ] The palette is black / red / white: `--primary` is the same red in `:root` and `.dark`, the
+- [x] The palette is black / red / white: `--primary` is the same red in `:root` and `.dark`, the
       background is white in light mode and black in dark mode, and no other hue is introduced
       (`grep` `globals.css` for the colour tokens).
-- [ ] A theme toggle switches light/dark and the choice survives a reload.
-- [ ] The Report action opens the **same** composer from the rail, the bottom bar and the header (one
-      dialog instance, not three).
-- [ ] `npm run lint` → `✔ No ESLint warnings or errors`; `npm run typecheck` → exit 0; `npm run build` →
+- [x] A theme toggle switches light/dark and the choice survives a reload.
+- [x] The Report action opens the **same** composer from every surface that offers it (one dialog
+      instance, not three).
+- [x] `npm run lint` → `✔ No ESLint warnings or errors`; `npm run typecheck` → exit 0; `npm run build` →
       `✓ Compiled successfully`.
-- [ ] The only `fetch(` under `apps/web/src/` is in `src/lib/api/client.ts` (the ESLint rule enforces it).
+- [x] The only `fetch(` under `apps/web/src/` is in `src/lib/api/client.ts` (the ESLint rule enforces it).
 
 ## Notes / gotchas
 
+- **T-026 refines this task's shell** and runs right after it: the nav items centred vertically in the
+  rail, the user / night-mode / Report controls moved into the rail (not the top bar) and the "Postly"
+  wordmark removed. Build this task so T-026 can move things without unpicking the structure: keep the
+  rail's parts in separate components (`rail-nav`, `rail-footer`, `rail-brand`) and the top bar in its own
+  component.
 - shadcn here is **4.23.0 / `base-nova`** on **`@base-ui/react`** — its `Tabs`/`Dialog` are Base UI, not
   Radix. `cn` (v0.5.1) is a tailwind-merge clone, so a later class wins over an earlier conflicting one.
 - The composer currently renders its own `DialogTrigger`. To open it from several places, lift the dialog

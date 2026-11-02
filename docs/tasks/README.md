@@ -40,6 +40,7 @@ Legend: `[ ]` ready · `[~]` in-progress · `[>]` review · `[x]` done · `[!]` 
 | T-023 | Frontend comments: thread view, replies and comment votes | [ ] | - | T-018, T-020 |
 | T-024 | Frontend deletion UI: delete my post, delete my account, ghost purge, removal request | [ ] | - | T-021, T-012, T-020 |
 | T-025 | Frontend sign-in: pseudonymous session, session restore, sign-out | [ ] | - | T-011, T-020 |
+| T-026 | App shell refinement: centred rail, user / night mode / Report on the left, no app name | [ ] | - | T-022 |
 
 ## Q2 · Moderation & safety — *goal: blurred warnings, reveals, admin queue, no bot floods*
 
@@ -88,9 +89,9 @@ Legend: `[ ]` ready · `[~]` in-progress · `[>]` review · `[x]` done · `[!]` 
 
 - **Q0, Q1 and the frontend half of Q1 are written.** Q2–Q5 are planned; the manager writes the task files
   when the quest opens. Do not start a planned task without a file.
-- **T-022 … T-025 are the remaining frontend work** (app shell + theme, comments UI, deletion UI, sign-in).
-  They are the last of Q1: without them the app cannot show a thread, cannot delete anything and cannot
-  sign anyone in.
+- **T-022 … T-026 are the remaining frontend work** (app shell + theme, its placement refinement, comments
+  UI, deletion UI, sign-in). They are the last of Q1: without them the app cannot show a thread, cannot
+  delete anything and cannot sign anyone in. **T-026 runs right after T-022** — they edit the same files.
 - New task files are created by the manager from [`_TEMPLATE.md`](_TEMPLATE.md).
 - Raw ideas go to [`../BACKLOG.md`](../BACKLOG.md), not here.
 - A task is **done** only after the manager re-runs its `## Done when` checks and appends a

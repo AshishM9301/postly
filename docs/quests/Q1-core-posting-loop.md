@@ -3,7 +3,7 @@
 **Goal:** a signed-in, pseudonymous or ghost user can post text + photo in a Delhi area, see it in the feed,
 and the community can vote and argue in comments.
 
-**Status:** in progress (T-010 … T-021 done; T-022 … T-025 are the last frontend tasks)
+**Status:** in progress (T-010 … T-021 done; T-022 … T-026 are the last frontend tasks)
 
 **Done when**
 - A post created with a photo appears in `/feed/new` and `/feed/for-you` within 5 seconds.
@@ -34,6 +34,7 @@ and the community can vote and argue in comments.
 | T-023 | Frontend comments: thread view, replies and comment votes | ready |
 | T-024 | Frontend deletion UI: delete my post, delete my account, ghost purge, removal request | ready |
 | T-025 | Frontend sign-in: pseudonymous session, session restore, sign-out | ready |
+| T-026 | App shell refinement: centred rail, user / night mode / Report on the left, no app name | ready |
 
 **Notes**
 - Ghost identity is the riskiest part of this quest. T-012 and T-021 must be reviewed carefully by the
