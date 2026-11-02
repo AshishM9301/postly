@@ -6,26 +6,31 @@ import { toast } from "sonner";
 
 import { useComposer } from "~/components/composer-provider";
 import { DataPrivacyButton } from "~/components/data-privacy-button";
+import { SessionButton } from "~/components/session-button";
+import { useSession } from "~/components/session-provider";
 import { ThemeToggle } from "~/components/theme-toggle";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
+import { describeApiError } from "~/lib/api-error";
 import { ensureGhostIdentity, rotateGhostAlias } from "~/lib/identity";
 
 export function AppHeader() {
-  const [alias, setAlias] = useState<string | null>(null);
+  const [ghostAlias, setGhostAlias] = useState<string | null>(null);
+  const [rotating, setRotating] = useState(false);
   const { openComposer } = useComposer();
+  const { session, rotateAlias } = useSession();
 
   useEffect(() => {
     let cancelled = false;
     void ensureGhostIdentity()
       .then((identity) => {
         if (!cancelled) {
-          setAlias(identity.alias);
+          setGhostAlias(identity.alias);
         }
       })
       .catch(() => {
         if (!cancelled) {
-          setAlias(null);
+          setGhostAlias(null);
         }
       });
     return () => {
@@ -33,10 +38,28 @@ export function AppHeader() {
     };
   }, []);
 
-  function rotate() {
-    const next = rotateGhostAlias();
-    setAlias(next);
-    toast.success(`You are now posting as ${next}`);
+  const alias = session?.alias ?? ghostAlias;
+  const mode = session?.mode ?? "ghost";
+
+  async function rotate() {
+    if (rotating) {
+      return;
+    }
+    setRotating(true);
+    try {
+      if (session) {
+        const next = await rotateAlias();
+        toast.success(`You are now posting as ${next}`);
+      } else {
+        const next = rotateGhostAlias();
+        setGhostAlias(next);
+        toast.success(`You are now posting as ${next}`);
+      }
+    } catch (error) {
+      toast.error(describeApiError(error));
+    } finally {
+      setRotating(false);
+    }
   }
 
   return (
@@ -59,9 +82,10 @@ export function AppHeader() {
             type="button"
             variant="ghost"
             size="sm"
-            onClick={rotate}
-            title="Rotate your anonymous alias"
-            aria-label="Rotate your anonymous alias"
+            disabled={rotating}
+            onClick={() => void rotate()}
+            title={`Posting as ${alias ?? "…"} (${mode}) — rotate alias`}
+            aria-label={`Posting as ${alias ?? "unknown"} (${mode}). Rotate alias`}
           >
             <Avatar size="sm">
               <AvatarFallback className="bg-muted text-muted-foreground">
@@ -72,6 +96,7 @@ export function AppHeader() {
               {alias ?? "…"}
             </span>
           </Button>
+          <SessionButton className="md:hidden" />
           <ThemeToggle className="md:hidden" />
           <DataPrivacyButton className="md:hidden" />
           <Button

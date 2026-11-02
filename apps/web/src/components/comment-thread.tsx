@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { CommentForm } from "~/components/comment-form";
 import { CommentItem, type CommentNode } from "~/components/comment-item";
+import { useSession } from "~/components/session-provider";
 import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
 import { getComments, type CommentOut } from "~/lib/api/endpoints";
@@ -35,6 +36,7 @@ function buildTree(comments: CommentOut[]): CommentNode[] {
 
 export function CommentThread({ postId }: { postId: string }) {
   const [ownCommentIds, setOwnCommentIds] = useState<Set<string>>(new Set());
+  const { session } = useSession();
 
   const refreshOwnCommentIds = useCallback(() => {
     void listOwnCommentIds()
@@ -121,6 +123,7 @@ export function CommentThread({ postId }: { postId: string }) {
                 postId={postId}
                 comment={comment}
                 ownCommentIds={ownCommentIds}
+                sessionUserId={session?.userId ?? null}
                 onOwnCommentChanged={refreshOwnCommentIds}
               />
             ))}

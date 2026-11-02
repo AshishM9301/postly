@@ -35,6 +35,7 @@ import {
 import type { Coordinates } from "~/lib/geo";
 import { createGhostPostIdentity } from "~/lib/identity";
 import { deletePostKey } from "~/lib/ghost";
+import { getSessionToken } from "~/lib/session";
 
 type Stage = "idle" | "posting" | "uploading";
 
@@ -110,24 +111,40 @@ export function ComposerDialog({
     setStage("posting");
 
     try {
-      const identity = await createGhostPostIdentity(postId);
-      await createPost({
-        id: postId,
-        title: title.trim(),
-        body: body.trim(),
-        area_id: area.id,
-        category_id: categoryId,
-        alias: identity.alias,
-        owner_key: identity.ownerKey,
-        status: "OPEN",
-        ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
-      });
+      const signedIn = getSessionToken() !== null;
+      let ownerKey: string | null = null;
+
+      if (signedIn) {
+        await createPost({
+          id: postId,
+          title: title.trim(),
+          body: body.trim(),
+          area_id: area.id,
+          category_id: categoryId,
+          status: "OPEN",
+          ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
+        });
+      } else {
+        const identity = await createGhostPostIdentity(postId);
+        ownerKey = identity.ownerKey;
+        await createPost({
+          id: postId,
+          title: title.trim(),
+          body: body.trim(),
+          area_id: area.id,
+          category_id: categoryId,
+          alias: identity.alias,
+          owner_key: identity.ownerKey,
+          status: "OPEN",
+          ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
+        });
+      }
       created = true;
 
       if (file) {
         setStage("uploading");
         try {
-          await uploadMedia(file, postId, identity.ownerKey);
+          await uploadMedia(file, postId, ownerKey);
         } catch (uploadError) {
           toast.error(
             `Post created, but the photo failed: ${

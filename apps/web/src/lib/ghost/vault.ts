@@ -18,6 +18,7 @@ const DB_NAME = "postly-ghost";
 const DB_VERSION = 1;
 const STORE_NAME = "keys";
 const SESSION_ID = "session";
+const ACCOUNT_SECRET_ID = "account";
 const POST_PREFIX = "post:";
 const COMMENT_PREFIX = "comment:";
 
@@ -44,7 +45,7 @@ export class GhostVaultError extends Error {
 
 type StoredKey = {
   id: string;
-  kind: "session" | "post" | "comment";
+  kind: "session" | "account" | "post" | "comment";
   key: string;
   alias?: string;
   createdAt: string;
@@ -241,6 +242,37 @@ export async function getSessionKey(): Promise<GhostSecret | null> {
 export async function deleteSessionKey(): Promise<void> {
   await withStore<undefined>("readwrite", (store) =>
     store.delete(SESSION_ID),
+  );
+}
+
+/**
+ * The pseudonymous account credential. Kept in IndexedDB, never in
+ * localStorage and never sent anywhere except `POST /auth/pseudo` and the
+ * account-delete request.
+ */
+export async function saveAccountSecret(secret: string): Promise<void> {
+  await putRecords([
+    {
+      id: ACCOUNT_SECRET_ID,
+      kind: "account",
+      key: secret,
+      createdAt: new Date().toISOString(),
+    },
+  ]);
+}
+
+export async function getAccountSecret(): Promise<string | null> {
+  const record = await withStore<StoredKey | undefined>(
+    "readonly",
+    (store) =>
+      store.get(ACCOUNT_SECRET_ID) as IDBRequest<StoredKey | undefined>,
+  );
+  return record?.key ?? null;
+}
+
+export async function deleteAccountSecret(): Promise<void> {
+  await withStore<undefined>("readwrite", (store) =>
+    store.delete(ACCOUNT_SECRET_ID),
   );
 }
 

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import { castVote, removeVote } from "~/lib/api/endpoints";
 import { voterKeyFor } from "~/lib/identity";
+import { getSessionToken } from "~/lib/session";
 import { getMyVote, setMyVote, type VoteValue } from "~/lib/votes-store";
 
 export function VoteButtons({
@@ -43,7 +44,8 @@ export function VoteButtons({
 
   const mutation = useMutation({
     mutationFn: async (next: VoteValue | null) => {
-      const voterKey = await voterKeyFor(targetId);
+      const voterKey =
+        getSessionToken() !== null ? null : await voterKeyFor(targetId);
       return next === null
         ? removeVote(targetType, targetId, voterKey)
         : castVote(targetType, targetId, next, voterKey);

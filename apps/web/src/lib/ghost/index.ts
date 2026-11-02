@@ -21,6 +21,7 @@ export {
 export {
   closeVault,
   countOwnPosts,
+  deleteAccountSecret,
   deleteCommentKey,
   deleteOwnPost,
   deletePostKey,
@@ -28,6 +29,7 @@ export {
   downloadVault,
   exportVault,
   exportVaultJson,
+  getAccountSecret,
   getCommentKey,
   getPostKey,
   getSessionKey,
@@ -37,6 +39,7 @@ export {
   listOwnPostEntries,
   listOwnPosts,
   resetVault,
+  saveAccountSecret,
   saveCommentKey,
   savePostKey,
   saveSessionKey,

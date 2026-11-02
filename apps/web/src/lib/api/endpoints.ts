@@ -1,8 +1,10 @@
-import { api, sessionApi } from "./client";
+import { api, ghostApi, sessionApi } from "./client";
 import type { components } from "./types";
 
+export type AliasResponse = components["schemas"]["AliasResponse"];
 export type AreaOut = components["schemas"]["AreaOut"];
 export type AreaDetection = components["schemas"]["AreaDetection"];
+export type AuthResponse = components["schemas"]["AuthResponse"];
 export type CategoryOut = components["schemas"]["CategoryOut"];
 export type CommentCreate = components["schemas"]["CommentCreate"];
 export type CommentOut = components["schemas"]["CommentOut"];
@@ -100,6 +102,19 @@ export async function getMe(): Promise<MeResponse> {
   return sessionApi.request<MeResponse>("/me");
 }
 
+export async function signInPseudo(secret: string): Promise<AuthResponse> {
+  return api.request<AuthResponse>("/auth/pseudo", {
+    method: "POST",
+    body: { secret },
+  });
+}
+
+export async function rotateSessionAlias(): Promise<AliasResponse> {
+  return api.request<AliasResponse>("/auth/rotate-alias", {
+    method: "POST",
+  });
+}
+
 export async function deleteMe(secret?: string | null): Promise<void> {
   await sessionApi.requestVoid("/me", {
     method: "DELETE",
@@ -110,7 +125,7 @@ export async function deleteMe(secret?: string | null): Promise<void> {
 export async function purgeGhost(
   sessionKey: string,
 ): Promise<GhostPurgeResult> {
-  return api.request<GhostPurgeResult>("/ghost/purge", {
+  return ghostApi.request<GhostPurgeResult>("/ghost/purge", {
     method: "POST",
     body: { session_key: sessionKey },
   });
@@ -140,12 +155,14 @@ export async function createPost(body: PostCreate): Promise<PostOut> {
 export async function uploadMedia(
   file: File,
   postId: string,
-  ownerKey: string,
+  ownerKey?: string | null,
 ): Promise<MediaUploadOut> {
   const form = new FormData();
   form.set("file", file);
   form.set("post_id", postId);
-  form.set("owner_key", ownerKey);
+  if (ownerKey) {
+    form.set("owner_key", ownerKey);
+  }
   return api.request<MediaUploadOut>("/media", { method: "POST", body: form });
 }
 
@@ -189,12 +206,16 @@ export async function createComment(
 
 export async function deleteComment(
   commentId: string,
-  ownerKey: string,
+  ownerKey?: string | null,
 ): Promise<void> {
-  await api.requestVoid(`/comments/${commentId}`, {
-    method: "DELETE",
-    body: { owner_key: ownerKey },
-  });
+  if (ownerKey) {
+    await ghostApi.requestVoid(`/comments/${commentId}`, {
+      method: "DELETE",
+      body: { owner_key: ownerKey },
+    });
+    return;
+  }
+  await api.requestVoid(`/comments/${commentId}`, { method: "DELETE" });
 }
 
 export async function castVote(

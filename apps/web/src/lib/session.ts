@@ -9,6 +9,13 @@
 
 export type SessionMode = "google" | "pseudonymous";
 
+export type ActiveSession = {
+  token: string;
+  alias: string;
+  mode: SessionMode;
+  userId: string | null;
+};
+
 const TOKEN_KEY = "postly.session.token";
 const ALIAS_KEY = "postly.session.alias";
 const MODE_KEY = "postly.session.mode";

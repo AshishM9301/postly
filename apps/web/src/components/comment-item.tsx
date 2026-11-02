@@ -19,17 +19,22 @@ export function CommentItem({
   postId,
   comment,
   ownCommentIds,
+  sessionUserId,
   onOwnCommentChanged,
 }: {
   postId: string;
   comment: CommentNode;
   ownCommentIds: Set<string>;
+  sessionUserId: string | null;
   onOwnCommentChanged: () => void;
 }) {
   const queryClient = useQueryClient();
   const [replyOpen, setReplyOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const isOwn = ownCommentIds.has(comment.id);
+  const vaultOwned = ownCommentIds.has(comment.id);
+  const sessionOwned =
+    sessionUserId !== null && comment.author?.id === sessionUserId;
+  const isOwn = vaultOwned || sessionOwned;
 
   async function remove() {
     if (
@@ -42,12 +47,16 @@ export function CommentItem({
 
     setDeleting(true);
     try {
-      const ownerKey = await ownerKeyForComment(comment.id);
-      if (ownerKey === null) {
+      const ownerKey = vaultOwned
+        ? await ownerKeyForComment(comment.id)
+        : null;
+      if (vaultOwned && ownerKey === null) {
         throw new Error("This device has no key for that comment anymore.");
       }
       await deleteComment(comment.id, ownerKey);
-      await deleteCommentKey(comment.id);
+      if (vaultOwned) {
+        await deleteCommentKey(comment.id);
+      }
       await queryClient.invalidateQueries({ queryKey: ["comments", postId] });
       await queryClient.invalidateQueries({ queryKey: ["feed"] });
       onOwnCommentChanged();
@@ -133,6 +142,7 @@ export function CommentItem({
               postId={postId}
               comment={reply}
               ownCommentIds={ownCommentIds}
+              sessionUserId={sessionUserId}
               onOwnCommentChanged={onOwnCommentChanged}
             />
           ))}

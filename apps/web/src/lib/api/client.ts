@@ -272,8 +272,11 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
   return new ApiClient(options);
 }
 
-/** Anonymous/ghost transport: never carries a bearer token. */
-export const api = createApiClient();
+/** The main transport: carries the bearer token when a session is signed in. */
+export const api = createApiClient({ getToken: getSessionToken });
 
-/** Authenticated transport for `/me` and account deletion. */
-export const sessionApi = createApiClient({ getToken: getSessionToken });
+/** Explicitly anonymous transport for owner-key ghost operations. */
+export const ghostApi = createApiClient();
+
+/** Authenticated transport used by `/me` and account deletion. */
+export const sessionApi = api;

@@ -6,6 +6,7 @@ import { useState, type ReactNode } from "react";
 
 import { ComposerProvider } from "~/components/composer-provider";
 import { DataProvider } from "~/components/data-provider";
+import { SessionProvider } from "~/components/session-provider";
 import { Toaster } from "~/components/ui/sonner";
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -25,9 +26,11 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
-        <ComposerProvider>
-          <DataProvider>{children}</DataProvider>
-        </ComposerProvider>
+        <SessionProvider>
+          <ComposerProvider>
+            <DataProvider>{children}</DataProvider>
+          </ComposerProvider>
+        </SessionProvider>
         <Toaster position="top-center" />
       </QueryClientProvider>
     </ThemeProvider>

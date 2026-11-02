@@ -5,7 +5,7 @@
  * one place that binds it to `client.ts`, which is the app's single fetch door.
  */
 
-import { api, type ApiClient } from "./client.ts";
+import { ghostApi, type ApiClient } from "./client.ts";
 import type { GhostDeleteTransport } from "../ghost/vault.ts";
 
 export function createGhostTransport(client: ApiClient): GhostDeleteTransport {
@@ -16,4 +16,5 @@ export function createGhostTransport(client: ApiClient): GhostDeleteTransport {
     });
 }
 
-export const ghostTransport: GhostDeleteTransport = createGhostTransport(api);
+export const ghostTransport: GhostDeleteTransport =
+  createGhostTransport(ghostApi);

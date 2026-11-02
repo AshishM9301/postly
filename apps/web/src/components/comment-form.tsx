@@ -8,6 +8,7 @@ import { Textarea } from "~/components/ui/textarea";
 import { createComment, type CommentOut } from "~/lib/api/endpoints";
 import { deleteCommentKey } from "~/lib/ghost";
 import { createGhostCommentIdentity } from "~/lib/identity";
+import { getSessionToken } from "~/lib/session";
 
 export function CommentForm({
   postId,
@@ -30,6 +31,15 @@ export function CommentForm({
   const mutation = useMutation({
     mutationFn: async () => {
       const commentId = crypto.randomUUID();
+
+      if (getSessionToken() !== null) {
+        return createComment(postId, {
+          id: commentId,
+          body: body.trim(),
+          parent_id: parentId,
+        });
+      }
+
       const identity = await createGhostCommentIdentity(commentId);
       try {
         return await createComment(postId, {

@@ -5,11 +5,13 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { useSession } from "~/components/session-provider";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { deleteMe, getMe } from "~/lib/api/endpoints";
 import { describeApiError } from "~/lib/api-error";
+import { deleteAccountSecret } from "~/lib/ghost";
 import { clearSession, getSessionToken } from "~/lib/session";
 import { clearMyVotes } from "~/lib/votes-store";
 
@@ -20,7 +22,8 @@ export function AccountDeletion({
   active: boolean;
   onDeleted?: () => void;
 }) {
-  const token = active ? getSessionToken() : null;
+  const { session, refreshSession } = useSession();
+  const token = active ? (session?.token ?? getSessionToken()) : null;
   const queryClient = useQueryClient();
   const [secret, setSecret] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +47,9 @@ export function AccountDeletion({
       deleteMe(me.data?.mode === "pseudonymous" ? secret : null),
     onSuccess: async () => {
       clearSession();
+      refreshSession();
       clearMyVotes();
+      await deleteAccountSecret().catch(() => undefined);
       await Promise.all([
         queryClient.resetQueries({ queryKey: ["feed"] }),
         queryClient.resetQueries({ queryKey: ["comments"] }),

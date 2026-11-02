@@ -7,9 +7,11 @@ import { deriveOwnerKey, generateSecret } from "../crypto.ts";
 import {
   closeVault,
   countOwnPosts,
+  deleteAccountSecret,
   deleteCommentKey,
   deleteOwnPost,
   exportVaultJson,
+  getAccountSecret,
   getCommentKey,
   getPostKey,
   getSessionKey,
@@ -18,6 +20,7 @@ import {
   listOwnCommentIds,
   listOwnPosts,
   resetVault,
+  saveAccountSecret,
   saveCommentKey,
   savePostKey,
   saveSessionKey,
@@ -49,6 +52,20 @@ describe("ghost key vault", () => {
     assert.deepEqual(await getPostKey("post-1"), postSecret);
     assert.deepEqual(await listOwnPosts(), ["post-1"]);
     assert.equal(await countOwnPosts(), 1);
+  });
+
+  it("stores the pseudonymous account secret in the vault", async () => {
+    const secret = "account-secret-" + "x".repeat(40);
+
+    await saveAccountSecret(secret);
+
+    assert.equal(await getAccountSecret(), secret);
+    assert.deepEqual(await listOwnPosts(), []);
+    assert.deepEqual(await listOwnCommentIds(), []);
+
+    await deleteAccountSecret();
+
+    assert.equal(await getAccountSecret(), null);
   });
 
   it("stores comment keys separately from post keys", async () => {
