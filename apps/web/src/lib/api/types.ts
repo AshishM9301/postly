@@ -22,10 +22,748 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Auth Google
+         * @description Exchange a Firebase ID token for an opaque Postly session token.
+         */
+        post: operations["auth_google_api_v1_auth_google_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/pseudo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Auth Pseudo
+         * @description Create or reopen a pseudonymous identity.
+         *
+         *     The raw ``secret`` leaves this function unpersisted: only its salted hash is
+         *     written to ``User.secretHash``. Reusing the same secret reopens the identity.
+         */
+        post: operations["auth_pseudo_api_v1_auth_pseudo_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/rotate-alias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rotate Alias
+         * @description Issue a fresh alias for the same identity, leaving history intact.
+         */
+        post: operations["rotate_alias_api_v1_auth_rotate_alias_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Me
+         * @description Resolve Google, pseudonymous and ghost callers.
+         *
+         *     Ghost has no row to look up, so it returns ``mode: "ghost"`` with a null
+         *     alias and the default expiry preference; its ownership lives on each row.
+         */
+        get: operations["me_api_v1_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/areas/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Areas
+         * @description Search by PIN (exact) or by locality name/district (substring match).
+         *
+         *     Six digits are treated as a PIN, never a fuzzy name; anything else is a
+         *     case-insensitive ``ILIKE`` over the area's display name, its stored aliases
+         *     (every office name for the PIN) and its district, bounded by ``limit``.
+         *     ``%``, ``_`` and ``\`` are matched literally, not as LIKE wildcards.
+         */
+        get: operations["search_areas_api_v1_areas_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/areas/detect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Detect Area
+         * @description Return the nearest seeded area to a coordinate.
+         *
+         *     Deliberately has no distance cut-off: a visitor just outside Delhi (or with a
+         *     coarse GPS fix) still gets the closest area plus the distance to judge it.
+         *     A ``404 area_not_found`` only happens when the table has no active areas.
+         */
+        get: operations["detect_area_api_v1_areas_detect_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/areas/{area_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Area
+         * @description One area plus how many posts belong to it (public profile of an area).
+         */
+        get: operations["get_area_api_v1_areas__area_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Categories */
+        get: operations["list_categories_api_v1_categories_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/posts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Post
+         * @description Create a post as a Google user, a pseudonymous user or a ghost.
+         *
+         *     The id is client-generated when supplied (required for ghosts so they can
+         *     pre-compute ``owner_key``); otherwise the server generates a UUID.
+         */
+        post: operations["create_post_api_v1_posts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/posts/{post_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Post
+         * @description Public read. The response model is the allow-list; no ownership secrets.
+         */
+        get: operations["get_post_api_v1_posts__post_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Post
+         * @description Hard delete. DB rows cascade; files are removed by the T-016 seam.
+         */
+        delete: operations["delete_post_api_v1_posts__post_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Post
+         * @description Edit the title/body. Ghosts must include ``owner_key`` in the body.
+         */
+        patch: operations["update_post_api_v1_posts__post_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Media
+         * @description Attach one image/video to a post. Only the post's owner may upload.
+         *
+         *     Ghosts prove ownership with ``owner_key`` in the multipart form, exactly as
+         *     they do for PATCH/DELETE.
+         */
+        post: operations["upload_media_api_v1_media_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/{media_id}/signed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Signed Media Url
+         * @description Return a ≤5-minute signed URL for an existing, visible media row.
+         *
+         *     Public media is part of a public post, so no session is required; the
+         *     signature is the authorization. Hidden media (moderation) is 404, and a
+         *     deleted row can never be signed again.
+         */
+        get: operations["signed_media_url_api_v1_media__media_id__signed_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/{media_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Serve Media File
+         * @description Serve the file only with a valid, unexpired signature and a live row.
+         */
+        get: operations["serve_media_file_api_v1_media__media_id__file_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/votes/{target_type}/{target_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Put Vote
+         * @description Cast or change a vote. Ghosts send the salted ``voter_key``.
+         */
+        put: operations["put_vote_api_v1_votes__target_type___target_id__put"];
+        post?: never;
+        /**
+         * Delete Vote
+         * @description Remove the caller's vote (idempotent) and return the new counters.
+         */
+        delete: operations["delete_vote_api_v1_votes__target_type___target_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/posts/{post_id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Comments
+         * @description Flat thread, oldest first; the client rebuilds the tree from parent_id.
+         */
+        get: operations["get_comments_api_v1_posts__post_id__comments_get"];
+        put?: never;
+        /**
+         * Post Comment
+         * @description Create a top-level comment or a reply (``parent_id``).
+         */
+        post: operations["post_comment_api_v1_posts__post_id__comments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/comments/{comment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Comment */
+        delete: operations["remove_comment_api_v1_comments__comment_id__delete"];
+        options?: never;
+        head?: never;
+        /** Edit Comment */
+        patch: operations["edit_comment_api_v1_comments__comment_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/feed/new": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Feed New
+         * @description Newest-first, cursor over ``(created_at, id)``.
+         */
+        get: operations["feed_new_api_v1_feed_new_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/feed/trending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Feed Trending
+         * @description Time-decayed engagement, 18 h half-life, no personalisation.
+         */
+        get: operations["feed_trending_api_v1_feed_trending_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/feed/for-you": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Feed For You
+         * @description 12 h half-life plus followed-area / followed-author boosts for sessions.
+         *
+         *     Anonymous callers get the same ranking as Trending here (all boosts 1.0).
+         */
+        get: operations["feed_for_you_api_v1_feed_for_you_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/feed/nearby": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Feed Nearby
+         * @description Posts with coordinates inside ``radius_m``, nearest first.
+         */
+        get: operations["feed_nearby_api_v1_feed_nearby_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AliasResponse */
+        AliasResponse: {
+            /** Alias */
+            alias: string;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "google" | "pseudonymous";
+        };
+        /** AreaDetail */
+        AreaDetail: {
+            /** Id */
+            id: string;
+            /** Pincode */
+            pincode: string;
+            /** Name */
+            name: string;
+            /** District */
+            district: string;
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
+            /** Post Count */
+            post_count: number;
+        };
+        /** AreaDetection */
+        AreaDetection: {
+            /** Id */
+            id: string;
+            /** Pincode */
+            pincode: string;
+            /** Name */
+            name: string;
+            /** District */
+            district: string;
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
+            /** Distance Meters */
+            distance_meters: number;
+        };
+        /** AreaOut */
+        AreaOut: {
+            /** Id */
+            id: string;
+            /** Pincode */
+            pincode: string;
+            /** Name */
+            name: string;
+            /** District */
+            district: string;
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
+        };
+        /** AuthResponse */
+        AuthResponse: {
+            /** Alias */
+            alias: string;
+            /** Token */
+            token: string;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "google" | "pseudonymous";
+        };
+        /** AuthorOut */
+        AuthorOut: {
+            /** Id */
+            id: string;
+            /** Alias */
+            alias: string;
+        };
+        /**
+         * BlameCategory
+         * @enum {string}
+         */
+        BlameCategory: "MUNICIPALITY" | "CONTRACTOR" | "UTILITY" | "POLICE" | "SCHOOL" | "LANDLORD" | "UNKNOWN";
+        /** Body_upload_media_api_v1_media_post */
+        Body_upload_media_api_v1_media_post: {
+            /** File */
+            file: string;
+            /** Post Id */
+            post_id: string;
+            /** Owner Key */
+            owner_key?: string | null;
+        };
+        /** CategoryOut */
+        CategoryOut: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /** Icon */
+            icon: string;
+            /** Color */
+            color: string;
+            /** Sort Order */
+            sort_order: number;
+        };
+        /** CommentCreate */
+        CommentCreate: {
+            /** Id */
+            id?: string | null;
+            /** Body */
+            body: string;
+            /** Parent Id */
+            parent_id?: string | null;
+            /** Alias */
+            alias?: string | null;
+            /** Owner Key */
+            owner_key?: string | null;
+        };
+        /** CommentMeta */
+        CommentMeta: {
+            /** Cursor */
+            cursor: string | null;
+            /** Has More */
+            has_more: boolean;
+        };
+        /** CommentOut */
+        CommentOut: {
+            /** Id */
+            id: string;
+            /** Post Id */
+            post_id: string;
+            /** Parent Id */
+            parent_id: string | null;
+            /** Alias */
+            alias: string;
+            /** Body */
+            body: string;
+            /** Depth */
+            depth: number;
+            moderation_state: components["schemas"]["ModerationState"];
+            /** Upvote Count */
+            upvote_count: number;
+            /** Downvote Count */
+            downvote_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            author: components["schemas"]["AuthorOut"] | null;
+        };
+        /** CommentOwnerKey */
+        CommentOwnerKey: {
+            /** Owner Key */
+            owner_key?: string | null;
+        };
+        /** CommentPage */
+        CommentPage: {
+            /** Data */
+            data: components["schemas"]["CommentOut"][];
+            meta: components["schemas"]["CommentMeta"];
+        };
+        /** CommentUpdate */
+        CommentUpdate: {
+            /** Body */
+            body: string;
+            /** Owner Key */
+            owner_key?: string | null;
+        };
+        /** Envelope[AliasResponse] */
+        Envelope_AliasResponse_: {
+            data: components["schemas"]["AliasResponse"];
+        };
+        /** Envelope[AreaDetail] */
+        Envelope_AreaDetail_: {
+            data: components["schemas"]["AreaDetail"];
+        };
+        /** Envelope[AreaDetection] */
+        Envelope_AreaDetection_: {
+            data: components["schemas"]["AreaDetection"];
+        };
+        /** Envelope[AuthResponse] */
+        Envelope_AuthResponse_: {
+            data: components["schemas"]["AuthResponse"];
+        };
+        /** Envelope[CommentOut] */
+        Envelope_CommentOut_: {
+            data: components["schemas"]["CommentOut"];
+        };
+        /** Envelope[MeResponse] */
+        Envelope_MeResponse_: {
+            data: components["schemas"]["MeResponse"];
+        };
+        /** Envelope[MediaUploadOut] */
+        Envelope_MediaUploadOut_: {
+            data: components["schemas"]["MediaUploadOut"];
+        };
+        /** Envelope[PostOut] */
+        Envelope_PostOut_: {
+            data: components["schemas"]["PostOut"];
+        };
+        /** Envelope[SignedUrlOut] */
+        Envelope_SignedUrlOut_: {
+            data: components["schemas"]["SignedUrlOut"];
+        };
+        /** Envelope[VoteOut] */
+        Envelope_VoteOut_: {
+            data: components["schemas"]["VoteOut"];
+        };
+        /** Envelope[list[AreaOut]] */
+        Envelope_list_AreaOut__: {
+            /** Data */
+            data: components["schemas"]["AreaOut"][];
+        };
+        /** Envelope[list[CategoryOut]] */
+        Envelope_list_CategoryOut__: {
+            /** Data */
+            data: components["schemas"]["CategoryOut"][];
+        };
+        /** FeedMeta */
+        FeedMeta: {
+            /** Cursor */
+            cursor: string | null;
+            /** Has More */
+            has_more: boolean;
+        };
+        /** FeedPage */
+        FeedPage: {
+            /** Data */
+            data: components["schemas"]["FeedPost"][];
+            meta: components["schemas"]["FeedMeta"];
+        };
+        /**
+         * FeedPost
+         * @description A post plus the tab-specific extras (rank score / distance).
+         */
+        FeedPost: {
+            /** Id */
+            id: string;
+            /** Alias */
+            alias: string;
+            /** Is Anonymous */
+            is_anonymous: boolean;
+            /** Title */
+            title: string;
+            /** Body */
+            body: string;
+            status: components["schemas"]["PostStatus"];
+            moderation_state: components["schemas"]["ModerationState"];
+            blame_category: components["schemas"]["BlameCategory"] | null;
+            /** Blame Label */
+            blame_label: string | null;
+            /** Blame Vote Count */
+            blame_vote_count: number;
+            /** Upvote Count */
+            upvote_count: number;
+            /** Downvote Count */
+            downvote_count: number;
+            /** Comment Count */
+            comment_count: number;
+            /** View Count */
+            view_count: number;
+            /** Lat */
+            lat: number | null;
+            /** Lng */
+            lng: number | null;
+            /** Expires At */
+            expires_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            area: components["schemas"]["AreaOut"];
+            category: components["schemas"]["CategoryOut"];
+            author: components["schemas"]["AuthorOut"] | null;
+            /** Media */
+            media: components["schemas"]["MediaOut"][];
+            /** Score */
+            score?: number | null;
+            /** Distance Meters */
+            distance_meters?: number | null;
+        };
+        /** GoogleAuthRequest */
+        GoogleAuthRequest: {
+            /** Id Token */
+            id_token: string;
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
         /** HealthResponse */
         HealthResponse: {
             /**
@@ -39,6 +777,228 @@ export interface components {
              */
             db: "ok" | "down";
         };
+        /** MeResponse */
+        MeResponse: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "google" | "pseudonymous" | "ghost";
+            /** Alias */
+            alias: string | null;
+            /** User Id */
+            user_id: string | null;
+            /** Expiry Days */
+            expiry_days: number;
+            /** Is Admin */
+            is_admin: boolean;
+        };
+        /**
+         * MediaKind
+         * @enum {string}
+         */
+        MediaKind: "IMAGE" | "VIDEO";
+        /** MediaOut */
+        MediaOut: {
+            /** Id */
+            id: string;
+            kind: components["schemas"]["MediaKind"];
+            /** Blur Hash */
+            blur_hash: string | null;
+            /** Width */
+            width: number | null;
+            /** Height */
+            height: number | null;
+            /** Duration Sec */
+            duration_sec: number | null;
+        };
+        /** MediaUploadOut */
+        MediaUploadOut: {
+            /** Media Id */
+            media_id: string;
+            /** Post Id */
+            post_id: string;
+            kind: components["schemas"]["MediaKind"];
+            /** Mime Type */
+            mime_type: string;
+            /** Bytes */
+            bytes: number;
+            /** Width */
+            width: number | null;
+            /** Height */
+            height: number | null;
+            /** Blur Hash */
+            blur_hash: string | null;
+        };
+        /**
+         * ModerationState
+         * @enum {string}
+         */
+        ModerationState: "CLEAN" | "FLAGGED" | "HIDDEN";
+        /** OwnerKeyBody */
+        OwnerKeyBody: {
+            /** Owner Key */
+            owner_key?: string | null;
+        };
+        /** PostCreate */
+        PostCreate: {
+            /** Id */
+            id?: string | null;
+            /** Title */
+            title: string;
+            /** Body */
+            body: string;
+            /** Area Id */
+            area_id: string;
+            /** Category Id */
+            category_id: string;
+            /** Alias */
+            alias?: string | null;
+            /** Owner Key */
+            owner_key?: string | null;
+            blame_category?: components["schemas"]["BlameCategory"] | null;
+            /** Blame Label */
+            blame_label?: string | null;
+            /**
+             * Status
+             * @default OPEN
+             * @constant
+             */
+            status: "OPEN";
+            /** Lat */
+            lat?: number | null;
+            /** Lng */
+            lng?: number | null;
+            /** Media Ids */
+            media_ids?: string[];
+        };
+        /** PostOut */
+        PostOut: {
+            /** Id */
+            id: string;
+            /** Alias */
+            alias: string;
+            /** Is Anonymous */
+            is_anonymous: boolean;
+            /** Title */
+            title: string;
+            /** Body */
+            body: string;
+            status: components["schemas"]["PostStatus"];
+            moderation_state: components["schemas"]["ModerationState"];
+            blame_category: components["schemas"]["BlameCategory"] | null;
+            /** Blame Label */
+            blame_label: string | null;
+            /** Blame Vote Count */
+            blame_vote_count: number;
+            /** Upvote Count */
+            upvote_count: number;
+            /** Downvote Count */
+            downvote_count: number;
+            /** Comment Count */
+            comment_count: number;
+            /** View Count */
+            view_count: number;
+            /** Lat */
+            lat: number | null;
+            /** Lng */
+            lng: number | null;
+            /** Expires At */
+            expires_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            area: components["schemas"]["AreaOut"];
+            category: components["schemas"]["CategoryOut"];
+            author: components["schemas"]["AuthorOut"] | null;
+            /** Media */
+            media: components["schemas"]["MediaOut"][];
+        };
+        /**
+         * PostStatus
+         * @enum {string}
+         */
+        PostStatus: "OPEN" | "IN_PROGRESS" | "SOLVED" | "CLOSED";
+        /** PostUpdate */
+        PostUpdate: {
+            /** Title */
+            title?: string | null;
+            /** Body */
+            body?: string | null;
+            /** Owner Key */
+            owner_key?: string | null;
+        };
+        /** PseudoAuthRequest */
+        PseudoAuthRequest: {
+            /** Secret */
+            secret: string;
+            /** Alias */
+            alias?: string | null;
+            /** Expiry Days */
+            expiry_days?: number | null;
+        };
+        /** SignedUrlOut */
+        SignedUrlOut: {
+            /** Url */
+            url: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
+        };
+        /** VoteCast */
+        VoteCast: {
+            /**
+             * Value
+             * @enum {integer}
+             */
+            value: 1 | -1;
+            /** Voter Key */
+            voter_key?: string | null;
+        };
+        /** VoteOut */
+        VoteOut: {
+            target_type: components["schemas"]["VoteTarget"];
+            /** Target Id */
+            target_id: string;
+            /** Value */
+            value: (1 | -1) | null;
+            /** Upvote Count */
+            upvote_count: number;
+            /** Downvote Count */
+            downvote_count: number;
+        };
+        /** VoteRemove */
+        VoteRemove: {
+            /** Voter Key */
+            voter_key?: string | null;
+        };
+        /**
+         * VoteTarget
+         * @enum {string}
+         */
+        VoteTarget: "POST" | "COMMENT" | "BLAME";
     };
     responses: never;
     parameters: never;
@@ -73,6 +1033,805 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    auth_google_api_v1_auth_google_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleAuthRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_AuthResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_pseudo_api_v1_auth_pseudo_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PseudoAuthRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_AuthResponse_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rotate_alias_api_v1_auth_rotate_alias_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_AliasResponse_"];
+                };
+            };
+        };
+    };
+    me_api_v1_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_MeResponse_"];
+                };
+            };
+        };
+    };
+    search_areas_api_v1_areas_search_get: {
+        parameters: {
+            query: {
+                q: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_list_AreaOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detect_area_api_v1_areas_detect_get: {
+        parameters: {
+            query: {
+                lat: number;
+                lng: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_AreaDetection_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_area_api_v1_areas__area_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                area_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_AreaDetail_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_categories_api_v1_categories_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_list_CategoryOut__"];
+                };
+            };
+        };
+    };
+    create_post_api_v1_posts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_PostOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_post_api_v1_posts__post_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_PostOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_post_api_v1_posts__post_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["OwnerKeyBody"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_post_api_v1_posts__post_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_PostOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_media_api_v1_media_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_media_api_v1_media_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_MediaUploadOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    signed_media_url_api_v1_media__media_id__signed_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_SignedUrlOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    serve_media_file_api_v1_media__media_id__file_get: {
+        parameters: {
+            query: {
+                expires: number;
+                sig: string;
+            };
+            header?: never;
+            path: {
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_vote_api_v1_votes__target_type___target_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                target_type: string;
+                target_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoteCast"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_VoteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_vote_api_v1_votes__target_type___target_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                target_type: string;
+                target_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["VoteRemove"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_VoteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_comments_api_v1_posts__post_id__comments_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                post_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommentPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_comment_api_v1_posts__post_id__comments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_CommentOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_comment_api_v1_comments__comment_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CommentOwnerKey"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_comment_api_v1_comments__comment_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_CommentOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    feed_new_api_v1_feed_new_get: {
+        parameters: {
+            query?: {
+                area_id?: string | null;
+                category_id?: string | null;
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    feed_trending_api_v1_feed_trending_get: {
+        parameters: {
+            query?: {
+                area_id?: string | null;
+                category_id?: string | null;
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    feed_for_you_api_v1_feed_for_you_get: {
+        parameters: {
+            query?: {
+                area_id?: string | null;
+                category_id?: string | null;
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    feed_nearby_api_v1_feed_nearby_get: {
+        parameters: {
+            query: {
+                lat: number;
+                lng: number;
+                radius_m?: number;
+                area_id?: string | null;
+                category_id?: string | null;
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

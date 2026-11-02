@@ -3,6 +3,8 @@ import "~/styles/globals.css";
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 
+import { Providers } from "~/app/providers";
+
 export const metadata: Metadata = {
   title: "Postly",
   description: "Local problems, community answers.",
@@ -18,8 +20,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable}`}>
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning className={geist.variable}>
+      <body className="min-h-screen bg-background text-foreground antialiased">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

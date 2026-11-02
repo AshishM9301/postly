@@ -175,6 +175,16 @@ export class ApiClient {
     path: string,
     options: ApiRequestOptions = {},
   ): Promise<T> {
+    return (await this.requestEnvelope<T>(path, options)).data;
+  }
+
+  /**
+   * Like {@link request} but keeps the ``meta`` page info (feed cursors).
+   */
+  async requestEnvelope<T>(
+    path: string,
+    options: ApiRequestOptions = {},
+  ): Promise<ApiEnvelope<T>> {
     const payload = await this.send(path, options);
 
     if (!isApiEnvelope(payload)) {
@@ -184,7 +194,7 @@ export class ApiClient {
       });
     }
 
-    return payload.data as T;
+    return payload as ApiEnvelope<T>;
   }
 
   /**
