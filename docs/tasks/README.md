@@ -37,7 +37,7 @@ Legend: `[ ]` ready · `[~]` in-progress · `[>]` review · `[x]` done · `[!]` 
 | T-020 | Frontend: feed UI, post card, composer, vote buttons | [x] | s-20261101-0810 | T-015, T-019 |
 | T-021 | Delete flows: post, account, ghost purge, removal request | [x] | s-20261102-0814 | T-011, T-012, T-015 |
 | T-022 | Frontend shell: left nav rail, mobile tab bar, black/red/white theme | [x] | s-20261102-0837 | T-020 |
-| T-023 | Frontend comments: thread view, replies and comment votes | [ ] | - | T-018, T-020 |
+| T-023 | Frontend comments: thread view, replies and comment votes | [>] | s-20261102-0927 | T-018, T-020 |
 | T-024 | Frontend deletion UI: delete my post, delete my account, ghost purge, removal request | [ ] | - | T-021, T-012, T-020 |
 | T-025 | Frontend sign-in: pseudonymous session, session restore, sign-out | [ ] | - | T-011, T-020 |
 | T-026 | App shell refinement: centred rail, user / night mode / Report on the left, no app name | [ ] | - | T-022 |
