@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { useState, type ReactNode } from "react";
 
 import { ComposerProvider } from "~/components/composer-provider";
+import { DataProvider } from "~/components/data-provider";
 import { Toaster } from "~/components/ui/sonner";
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -24,7 +25,9 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
-        <ComposerProvider>{children}</ComposerProvider>
+        <ComposerProvider>
+          <DataProvider>{children}</DataProvider>
+        </ComposerProvider>
         <Toaster position="top-center" />
       </QueryClientProvider>
     </ThemeProvider>

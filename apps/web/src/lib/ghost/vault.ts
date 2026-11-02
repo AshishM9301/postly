@@ -238,6 +238,12 @@ export async function getSessionKey(): Promise<GhostSecret | null> {
   return record === undefined ? null : decodeStoredKey(record.key);
 }
 
+export async function deleteSessionKey(): Promise<void> {
+  await withStore<undefined>("readwrite", (store) =>
+    store.delete(SESSION_ID),
+  );
+}
+
 export async function savePostKey(
   postId: string,
   secret: GhostSecret,

@@ -5,6 +5,7 @@ import { MapPin, UserRound } from "lucide-react";
 
 import { BlurhashImage } from "~/components/blurhash-image";
 import { CategoryIcon } from "~/components/category-icon";
+import { PostActions } from "~/components/post-actions";
 import { PostComments } from "~/components/post-comments";
 import { StatusBadge } from "~/components/status-badge";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
@@ -91,7 +92,10 @@ export function PostCard({ post }: { post: FeedPost }) {
           initialUpvotes={post.upvote_count}
           initialDownvotes={post.downvote_count}
         />
-        <PostComments post={post} />
+        <div className="flex items-center gap-1">
+          <PostActions post={post} />
+          <PostComments post={post} />
+        </div>
       </div>
     </Card>
   );

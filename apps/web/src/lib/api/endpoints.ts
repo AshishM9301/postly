@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api, sessionApi } from "./client";
 import type { components } from "./types";
 
 export type AreaOut = components["schemas"]["AreaOut"];
@@ -9,11 +9,14 @@ export type CommentOut = components["schemas"]["CommentOut"];
 export type CommentPage = components["schemas"]["CommentPage"];
 export type FeedPost = components["schemas"]["FeedPost"];
 export type FeedPage = components["schemas"]["FeedPage"];
+export type GhostPurgeResult = components["schemas"]["GhostPurgeResult"];
 export type MediaUploadOut = components["schemas"]["MediaUploadOut"];
+export type MeResponse = components["schemas"]["MeResponse"];
 export type ModerationState = components["schemas"]["ModerationState"];
 export type PostCreate = components["schemas"]["PostCreate"];
 export type PostOut = components["schemas"]["PostOut"];
 export type PostStatus = components["schemas"]["PostStatus"];
+export type RemovalRequestOut = components["schemas"]["RemovalRequestOut"];
 export type SignedUrlOut = components["schemas"]["SignedUrlOut"];
 export type VoteOut = components["schemas"]["VoteOut"];
 
@@ -91,6 +94,43 @@ export async function searchAreas(q: string, limit = 8): Promise<AreaOut[]> {
 
 export async function detectArea(lat: number, lng: number): Promise<AreaDetection> {
   return api.request<AreaDetection>("/areas/detect", { query: { lat, lng } });
+}
+
+export async function getMe(): Promise<MeResponse> {
+  return sessionApi.request<MeResponse>("/me");
+}
+
+export async function deleteMe(secret?: string | null): Promise<void> {
+  await sessionApi.requestVoid("/me", {
+    method: "DELETE",
+    body: secret ? { secret } : {},
+  });
+}
+
+export async function purgeGhost(
+  sessionKey: string,
+): Promise<GhostPurgeResult> {
+  return api.request<GhostPurgeResult>("/ghost/purge", {
+    method: "POST",
+    body: { session_key: sessionKey },
+  });
+}
+
+export async function requestRemoval(
+  postId: string,
+  details: string,
+): Promise<RemovalRequestOut> {
+  return api.request<RemovalRequestOut>(
+    `/posts/${encodeURIComponent(postId)}/removal-request`,
+    { method: "POST", body: { details } },
+  );
+}
+
+/** Session-owner delete. Ghost deletes carry `owner_key` through the vault. */
+export async function deletePostById(postId: string): Promise<void> {
+  await sessionApi.requestVoid(`/posts/${encodeURIComponent(postId)}`, {
+    method: "DELETE",
+  });
 }
 
 export async function createPost(body: PostCreate): Promise<PostOut> {

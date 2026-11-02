@@ -24,6 +24,7 @@ export {
   deleteCommentKey,
   deleteOwnPost,
   deletePostKey,
+  deleteSessionKey,
   downloadVault,
   exportVault,
   exportVaultJson,

@@ -1,3 +1,4 @@
+import { getSessionToken } from "../session.ts";
 import type { paths } from "./types";
 
 export type HealthData =
@@ -271,4 +272,8 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
   return new ApiClient(options);
 }
 
+/** Anonymous/ghost transport: never carries a bearer token. */
 export const api = createApiClient();
+
+/** Authenticated transport for `/me` and account deletion. */
+export const sessionApi = createApiClient({ getToken: getSessionToken });

@@ -102,6 +102,36 @@ export interface paths {
         get: operations["me_api_v1_me_get"];
         put?: never;
         post?: never;
+        /**
+         * Delete Me
+         * @description Hard delete the account, its content and every row that belongs to it.
+         *
+         *     Pseudonymous accounts must repeat their client ``secret`` in the body; a
+         *     Google account is authenticated by its session alone.
+         */
+        delete: operations["delete_me_api_v1_me_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ghost/purge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Purge Ghost Session
+         * @description Sweep posts, comments and votes whose salted key matches this secret.
+         *
+         *     The session secret travels in the request and is never persisted. Rows
+         *     created with a different secret (another ghost session) are untouched.
+         */
+        post: operations["purge_ghost_session_api_v1_ghost_purge_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -233,7 +263,7 @@ export interface paths {
         post?: never;
         /**
          * Delete Post
-         * @description Hard delete. DB rows cascade; files are removed by the T-016 seam.
+         * @description Hard delete the post, its media files and every child row.
          */
         delete: operations["delete_post_api_v1_posts__post_id__delete"];
         options?: never;
@@ -243,6 +273,28 @@ export interface paths {
          * @description Edit the title/body. Ghosts must include ``owner_key`` in the body.
          */
         patch: operations["update_post_api_v1_posts__post_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/posts/{post_id}/removal-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Removal
+         * @description Ask a moderator to remove content when the owner key was lost.
+         *
+         *     No ownership proof is required: a human checks the details instead.
+         */
+        post: operations["request_removal_api_v1_posts__post_id__removal_request_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/media": {
@@ -464,6 +516,14 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AccountDeleteRequest
+         * @description Pseudonymous accounts must prove ownership with their client secret.
+         */
+        AccountDeleteRequest: {
+            /** Secret */
+            secret?: string | null;
+        };
         /** AliasResponse */
         AliasResponse: {
             /** Alias */
@@ -655,6 +715,10 @@ export interface components {
         Envelope_CommentOut_: {
             data: components["schemas"]["CommentOut"];
         };
+        /** Envelope[GhostPurgeResult] */
+        Envelope_GhostPurgeResult_: {
+            data: components["schemas"]["GhostPurgeResult"];
+        };
         /** Envelope[MeResponse] */
         Envelope_MeResponse_: {
             data: components["schemas"]["MeResponse"];
@@ -666,6 +730,10 @@ export interface components {
         /** Envelope[PostOut] */
         Envelope_PostOut_: {
             data: components["schemas"]["PostOut"];
+        };
+        /** Envelope[RemovalRequestOut] */
+        Envelope_RemovalRequestOut_: {
+            data: components["schemas"]["RemovalRequestOut"];
         };
         /** Envelope[SignedUrlOut] */
         Envelope_SignedUrlOut_: {
@@ -753,6 +821,23 @@ export interface components {
             score?: number | null;
             /** Distance Meters */
             distance_meters?: number | null;
+        };
+        /**
+         * GhostPurgeRequest
+         * @description The base64url-encoded 32-byte ghost session secret, never stored.
+         */
+        GhostPurgeRequest: {
+            /** Session Key */
+            session_key: string;
+        };
+        /** GhostPurgeResult */
+        GhostPurgeResult: {
+            /** Posts */
+            posts: number;
+            /** Comments */
+            comments: number;
+            /** Votes */
+            votes: number;
         };
         /** GoogleAuthRequest */
         GoogleAuthRequest: {
@@ -944,6 +1029,31 @@ export interface components {
             /** Expiry Days */
             expiry_days?: number | null;
         };
+        /** RemovalRequestCreate */
+        RemovalRequestCreate: {
+            /** Details */
+            details: string;
+        };
+        /** RemovalRequestOut */
+        RemovalRequestOut: {
+            /** Id */
+            id: string;
+            /** Target Type */
+            target_type: string;
+            /** Target Id */
+            target_id: string;
+            status: components["schemas"]["ReportStatus"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * ReportStatus
+         * @enum {string}
+         */
+        ReportStatus: "OPEN" | "REVIEWING" | "ACTIONED" | "DISMISSED";
         /** SignedUrlOut */
         SignedUrlOut: {
             /** Url */
@@ -1139,6 +1249,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Envelope_MeResponse_"];
+                };
+            };
+        };
+    };
+    delete_me_api_v1_me_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AccountDeleteRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    purge_ghost_session_api_v1_ghost_purge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GhostPurgeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_GhostPurgeResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -1377,6 +1551,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Envelope_PostOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_removal_api_v1_posts__post_id__removal_request_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                post_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemovalRequestCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Envelope_RemovalRequestOut_"];
                 };
             };
             /** @description Validation Error */

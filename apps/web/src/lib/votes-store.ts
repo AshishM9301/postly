@@ -62,3 +62,15 @@ export function setMyVote(targetId: string, value: VoteValue | null): void {
   }
   writeStore(votes);
 }
+
+/** Clear every remembered vote after an account/ghost-session deletion. */
+export function clearMyVotes(): void {
+  memory.clear();
+  if (typeof localStorage !== "undefined") {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // Storage full/blocked: the in-memory map is already clear.
+    }
+  }
+}

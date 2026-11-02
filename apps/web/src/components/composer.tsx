@@ -138,6 +138,7 @@ export function ComposerDialog({
       }
 
       await queryClient.invalidateQueries({ queryKey: ["feed"] });
+      await queryClient.invalidateQueries({ queryKey: ["own-post-ids"] });
       toast.success("Problem reported");
       reset();
       onOpenChange(false);

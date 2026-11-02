@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { useComposer } from "~/components/composer-provider";
+import { DataPrivacyButton } from "~/components/data-privacy-button";
 import { ThemeToggle } from "~/components/theme-toggle";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
@@ -72,6 +73,7 @@ export function AppHeader() {
             </span>
           </Button>
           <ThemeToggle className="md:hidden" />
+          <DataPrivacyButton className="md:hidden" />
           <Button
             type="button"
             size="sm"
