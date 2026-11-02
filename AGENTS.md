@@ -341,11 +341,19 @@ postly/
   are voted with the same buttons as posts, and a ghost comment gets **its own key** in the vault
   (`comment:<id>`), never mixed with the post keys. Own-comment detection is device-local. The thread is
   client-rendered, so the SSR HTML does not contain the comments.
-- **The remaining work is T-024 … T-029 + T-038**: the deletion UI (T-024), the sign-in UI (T-025), the
-  shell placement refinement (T-026, runs right after T-022), the comment-delete sweep (T-027) and the
-  **"simple post"** line — the category is detected by AI and the title derived with a 300-word cap
-  (T-028), the area is resolved from GPS / a PIN asked at first open / an internet guess (T-029), and the
-  composer becomes one box: drop a photo or write 300 words (T-038).
+- **Deletion is live in the app** (T-024): a post you own gets a delete action (a vault `owner_key` for
+  ghosts, the session for an account), anything else gets "Ask a moderator"
+  (`POST /posts/{id}/removal-request`). The **Data & privacy** dialog (header on mobile, rail footer on
+  desktop) offers the account deletion (a pseudonymous account must repeat its secret) and the ghost
+  purge (it reports the server's `posts` / `comments` / `votes` counts and says plainly that per-post
+  keys are **not** swept). Every path clears the local state: the vault entry, the cached feed, the
+  comments cache and the remembered votes. `lib/session.ts` holds only the opaque bearer token — the
+  pseudonymous **secret** is not stored there (T-025 puts it in the vault).
+- **The remaining work is T-025 … T-029 + T-038**: the sign-in UI (T-025), the shell placement refinement
+  (T-026, runs right after T-022), the comment-delete sweep (T-027) and the **"simple post"** line — the
+  category is detected by AI and the title derived with a 300-word cap (T-028), the area is resolved from
+  GPS / a PIN asked at first open / an internet guess (T-029), and the composer becomes one box: drop a
+  photo or write 300 words (T-038).
 - Versions are already pinned and researched in `docs/research/00-versions.md` — do not re-derive them.
 - The repo is a git repository on branch `main`. **The manager may commit**; workers must not.
 

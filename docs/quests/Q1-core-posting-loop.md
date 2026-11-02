@@ -3,7 +3,7 @@
 **Goal:** a signed-in, pseudonymous or ghost user can post text + photo in a Delhi area, see it in the feed,
 and the community can vote and argue in comments.
 
-**Status:** in progress (T-010 … T-023 done; T-024 … T-029 + T-038 are the last tasks)
+**Status:** in progress (T-010 … T-024 done; T-025 … T-029 + T-038 are the last tasks)
 
 **Done when**
 - A post created with a photo appears in `/feed/new` and `/feed/for-you` within 5 seconds.
@@ -32,7 +32,7 @@ and the community can vote and argue in comments.
 | T-021 | Delete flows: post, account, ghost purge, removal request | done |
 | T-022 | Frontend shell: left nav rail, mobile tab bar, black/red/white theme | done |
 | T-023 | Frontend comments: thread view, replies and comment votes | done |
-| T-024 | Frontend deletion UI: delete my post, delete my account, ghost purge, removal request | ready |
+| T-024 | Frontend deletion UI: delete my post, delete my account, ghost purge, removal request | done |
 | T-025 | Frontend sign-in: pseudonymous session, session restore, sign-out | ready |
 | T-026 | App shell refinement: centred rail, user / night mode / Report on the left, no app name | ready |
 | T-027 | Deleting a comment must sweep its votes, reveals and reports | ready |
