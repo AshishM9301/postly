@@ -39,7 +39,7 @@ Legend: `[ ]` ready · `[~]` in-progress · `[>]` review · `[x]` done · `[!]` 
 | T-022 | Frontend shell: left nav rail, mobile tab bar, black/red/white theme | [x] | s-20261102-0837 | T-020 |
 | T-023 | Frontend comments: thread view, replies and comment votes | [x] | s-20261102-0927 | T-018, T-020 |
 | T-024 | Frontend deletion UI: delete my post, delete my account, ghost purge, removal request | [x] | s-20261102-1012 | T-021, T-012, T-020 |
-| T-025 | Frontend sign-in: pseudonymous session, session restore, sign-out | [ ] | - | T-011, T-020 |
+| T-025 | Frontend sign-in: pseudonymous session, session restore, sign-out | [x] | s-20261102-1039 | T-011, T-020 |
 | T-026 | App shell refinement: centred rail, user / night mode / Report on the left, no app name | [ ] | - | T-022 |
 | T-027 | Deleting a comment must sweep its votes, reveals and reports | [ ] | - | T-018, T-021 |
 | T-028 | AI-assisted posts: the category is detected, the title is derived, 300 words max | [ ] | - | T-015, T-019 |
@@ -93,9 +93,9 @@ Legend: `[ ]` ready · `[~]` in-progress · `[>]` review · `[x]` done · `[!]` 
 
 - **Q0, Q1 and the frontend half of Q1 are written.** Q2–Q5 are planned; the manager writes the task files
   when the quest opens. Do not start a planned task without a file.
-- **T-022 … T-038 are the remaining work.** T-022 (shell), T-023 (comments UI) and **T-024 (deletion UI)**
-  are done; T-025 (sign-in) and T-026 (shell placement) are the last frontend screens, and **T-026 runs
-  right after T-022** — they edit the same files. **T-027 … T-029 + T-038** are the "simple post" line:
+- **T-022 … T-038 are the remaining work.** T-022 (shell), T-023 (comments UI), **T-024 (deletion UI)**
+  and **T-025 (sign-in)** are done; **T-026** (shell placement) is the last frontend screen, and it runs
+  right after T-022 — they edit the same files. **T-027 … T-029 + T-038** are the "simple post" line:
   the category is detected by AI (T-028), the area is resolved (T-029) and the composer becomes one box
   (T-038). T-038 is numbered in the gap between Q2 and Q3 so it does not clash with the planned moderation
   tasks.

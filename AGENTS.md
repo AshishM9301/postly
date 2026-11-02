@@ -349,11 +349,19 @@ postly/
   keys are **not** swept). Every path clears the local state: the vault entry, the cached feed, the
   comments cache and the remembered votes. `lib/session.ts` holds only the opaque bearer token — the
   pseudonymous **secret** is not stored there (T-025 puts it in the vault).
-- **The remaining work is T-025 … T-029 + T-038**: the sign-in UI (T-025), the shell placement refinement
-  (T-026, runs right after T-022), the comment-delete sweep (T-027) and the **"simple post"** line — the
-  category is detected by AI and the title derived with a 300-word cap (T-028), the area is resolved from
-  GPS / a PIN asked at first open / an internet guess (T-029), and the composer becomes one box: drop a
-  photo or write 300 words (T-038).
+- **Sign-in is live** (T-025): a pseudonymous identity needs no email or phone — the app generates a
+  256-bit secret on the device, keeps it in the **IndexedDB vault** (never in `localStorage`, never in the
+  vault export) and exchanges it for a bearer token (`POST /auth/pseudo`). The token lives in
+  `lib/session.ts` (`localStorage`) and the session is restored and validated with `GET /me` on load.
+  Signing out clears the token and the alias, keeps the secret in the vault and falls back to ghost.
+  **The main transport now carries the token**, so a signed-in write is attributed to the account; every
+  ghost owner-key call uses the tokenless `ghostApi`, so a ghost operation is never attributed to it.
+  Google sign-in still needs Firebase credentials and is not in the app yet.
+- **The remaining work is T-026 … T-029 + T-038**: the shell placement refinement (T-026, runs right
+  after T-022), the comment-delete sweep (T-027) and the **"simple post"** line — the category is detected
+  by AI and the title derived with a 300-word cap (T-028), the area is resolved from GPS / a PIN asked at
+  first open / an internet guess (T-029), and the composer becomes one box: drop a photo or write 300
+  words (T-038).
 - Versions are already pinned and researched in `docs/research/00-versions.md` — do not re-derive them.
 - The repo is a git repository on branch `main`. **The manager may commit**; workers must not.
 
